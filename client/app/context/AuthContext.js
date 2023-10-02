@@ -1,74 +1,107 @@
 import { createContext, useEffect, useState } from "react";
+import { Alert } from "react-native";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
-
-const API_URL = "http://localhost:8000";
+import { privateAxios } from "../utils/axios";
+import { config } from "../config/config";
 
 export const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState({
+    user: null,
     token: null,
     authenticated: null,
   });
 
-  useEffect(()=>{
-    const loadToken = async() =>{
+  const [isBudgetExsist, setIsBudgetExist] = useState(null);
+  const [isTaskDone, setIsTaskDone] = useState(null);
 
-      const token = SecureStore.getItemAsync(TOKEN_KEY);
+  useEffect(() => {
+    const loadToken = async () => {
+      try {
+        const token = await SecureStore.getItemAsync("TOKEN_KEY");
+        const user = await SecureStore.getItemAsync("USER_DETAILS");
 
-      if(token){
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${token}`;
+        if (token) {
+          console.log(token);
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-        setAuth({
-          token: token,
-          authenticated: true,
-        });
+          setAuth({
+            user: user,
+            token: token,
+            authenticated: true,
+          });
+          checkBugetExist(user);
+        }
+      } catch (error) {
+        console.log(error);
       }
-
-    }
+    };
 
     loadToken();
-  },[])
+  }, []);
 
-  const register = async (username, email, password) => {
-    try {
-      return await axios.post(`${API_URL}/api/v1/auth/register/`, {
-        username,
-        email,
-        password,
-      });
-    } catch (error) {
-      console.log(`${e.message}:`, error);
-    }
+  const register = async (user_name, email, password) => {
+    return await axios.post(`${config.BASE_URL}/api/v1/auth/register/`, {
+      user_name,
+      email,
+      password,
+    });
   };
+
+  async function checkBugetExist(user) {
+    try {
+      if (user) {
+        const result = await axios.get(
+          `${config.BASE_URL}/api/v1/budget/${user}`
+        );
+
+        //console.log(result);
+
+        if (result?.data?.data != null) {
+          setIsBudgetExist(true);
+        } else {
+          setIsBudgetExist(false);
+        }
+      } else {
+        setIsBudgetExist(false);
+      }
+    } catch (error) {
+      console.log("ERROR", error);
+    }
+  }
 
   const login = async (email, password) => {
     try {
-      const result = await axios.post(`${API_URL}/api/v1/auth/login/`, {
+      const result = await axios.post(`${config.BASE_URL}/api/v1/auth/login/`, {
         email,
         password,
       });
 
+      //console.log(result?.data?.data);
+
       setAuth({
-        token: result.data.token,
+        user: result?.data?.data?._id,
+        token: result?.data?.data?.token,
         authenticated: true,
       });
 
       axios.defaults.headers.common[
         "Authorization"
       ] = `Bearer ${result.data.token}`;
-      await SecureStore.setItemAsync(TOKEN_KEY, result.data.token);
+
+      await SecureStore.setItemAsync("TOKEN_KEY", result?.data?.data?.token);
+      await SecureStore.setItemAsync("USER_DETAILS", result?.data?.data?._id);
+      checkBugetExist(result?.data?.data?._id);
     } catch (error) {
       console.log(`${e.message}:`, error);
     }
   };
 
-  const logout = async (username, email, password) => {
+  const logout = async () => {
     try {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
+      await SecureStore.deleteItemAsync("TOKEN_KEY");
     } catch (error) {
       console.log(`${e.message}:`, error);
     }
@@ -78,14 +111,18 @@ export const AuthProvider = ({ children }) => {
       token: null,
       authenticated: false,
     });
+
+    setIsBudgetExist(false);
   };
 
   const value = {
     onRegister: register,
     onLogin: login,
     onLogout: logout,
-    auth
+    isBudgetExsist,
+    auth,
+    checkBugetExist
   };
-  
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -9,11 +9,11 @@ const app = express();
 
 app.use(
   cors({
-    origin: "*", 
-    credentials: true,
+    origin: "*",
   })
 );
 app.use(express.json());
+app.set("trust proxy", 1);
 
 
 mongoose.connect(config.MONGODB_URI, {

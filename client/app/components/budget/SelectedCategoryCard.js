@@ -1,7 +1,7 @@
 import { View, Text, Image, StyleSheet } from "react-native";
 import React from "react";
 
-const SelectedCategoryCard = ({ category, categoryId }) => {
+const SelectedCategoryCard = ({ category, categoryId, camount }) => {
   return (
     <View key={categoryId} style={styles.categoryCardList}>
       <View style={styles.categoryCardListItemLeft}>
@@ -9,9 +9,9 @@ const SelectedCategoryCard = ({ category, categoryId }) => {
           style={styles.selectedCategoryIcon}
           source={{ uri: category.icon }}
         ></Image>
-        <Text style={styles.selectedCategoryName}>{category.name}</Text>
+        <Text style={styles.selectedCategoryName}>{category.category_name}</Text>
       </View>
-      <Text style={styles.selectedCategoryName}>Rs. 2000.00</Text>
+      <Text style={styles.selectedCategoryName}>Rs. {camount}.00</Text>
     </View>
   );
 };

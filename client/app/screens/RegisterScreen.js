@@ -7,18 +7,22 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import logo from "../../assets/app_logo.png";
 import { Formik } from "formik";
 import * as Yup from "yup";
+import useAuth from "../hooks/useAuth";
 
 const RegisterScreen = ({ navigation }) => {
-  const [verifySend, setVerifySend] = useState(false);
+  //const [verifySend, setVerifySend] = useState(false);
+  const { onRegister } = useAuth();
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#8373C1" />
-      {verifySend ? (
+      {/* verifySend ? (
         <Formik
           initialValues={{ v_code: "" }}
           validationSchema={verifyCodeValidationSchema}
@@ -37,10 +41,10 @@ const RegisterScreen = ({ navigation }) => {
             touched,
           }) => (
             <>
-              {/* Title */}
+              
               <Image source={logo} style={styles.logo} />
 
-              {/* Title and Message */}
+              
               <View style={styles.headerContainer}>
                 <Text style={styles.title}>Email Verification</Text>
                 <Text style={styles.welcomeMessage}>
@@ -48,7 +52,7 @@ const RegisterScreen = ({ navigation }) => {
                 </Text>
               </View>
 
-              {/* Verification Code Input */}
+              
               <View style={styles.formContainer}>
                 <View style={styles.inputContainer}>
                   <TextInput
@@ -78,98 +82,124 @@ const RegisterScreen = ({ navigation }) => {
                 </>
               </View>
             </>
-          )}
-        </Formik>
-      ) : (
-        <Formik
-          initialValues={{ user_name: "", email: "", password: "" }}
-          validationSchema={registerValidationSchema}
-          onSubmit={(values) => {
-            setVerifySend(true);
-            console.log(values);
-          }}
-        >
-          {({
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            values,
-            errors,
-            touched,
-          }) => (
-            <>
-              {/* Title */}
-              <Image source={logo} style={styles.logo} />
+          
+        </Formik> */}
 
-              <View style={styles.headerContainer}>
-                <Text style={styles.title}>Sign up</Text>
-                <Text style={styles.welcomeMessage}>
-                  Hello, Welcome to Budget Buddy,
-                </Text>
-              </View>
+      <Formik
+        initialValues={{ user_name: "", email: "", password: "" }}
+        validationSchema={registerValidationSchema}
+        onSubmit={async (values, { resetForm }) => {
+          const { user_name, email, password } = values;
+          try {
+            const result = await onRegister(user_name, email, password);
+            console.log(result.status);
+            if (result?.status == 201) {
+              Alert.alert(
+                "Registered Successfully",
+                "Your account has create successfuly! Press ok to login.",
+                [
+                  { text: "OK", onPress: () => navigation.navigate("Login") },
+                ]
+              );
+            }
+          } catch (error) {
+            if (error?.response?.status == 400) {
+              Alert.alert("Bad request", `${error?.response?.data?.message}`, [
+                {
+                  text: "Cancel",
+                  onPress: () => console.log("Cancel Pressed"),
+                  style: "cancel",
+                },
+                { text: "OK", onPress: () => resetForm() },
+              ]);
+            } else {
+              Alert.alert("Error :", `${error}`, [
+                { text: "OK", onPress: () => resetForm() },
+              ]);
+            }
+          }
+        }}
+      >
+        {({
+          handleChange,
+          handleBlur,
+          handleSubmit,
+          values,
+          errors,
+          touched,
+        }) => (
+          <>
+            {/* Title */}
+            <Image source={logo} style={styles.logo} />
 
-              {/* Form */}
-              <View style={styles.formContainer}>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Username</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your username"
-                    onChangeText={handleChange("user_name")}
-                    onBlur={handleBlur("user_name")}
-                    value={values.user_name}
-                  />
-                  {touched.user_name && errors.user_name && (
-                    <Text style={{ color: "red" }}>{errors.user_name}</Text>
-                  )}
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Email</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your email"
-                    onChangeText={handleChange("email")}
-                    onBlur={handleBlur("email")}
-                    value={values.email}
-                  />
-                  {touched.email && errors.email && (
-                    <Text style={{ color: "red" }}>{errors.email}</Text>
-                  )}
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={handleChange("password")}
-                    onBlur={handleBlur("password")}
-                    value={values.password}
-                    placeholder="Enter your password"
-                    secureTextEntry={true}
-                  />
-                  {touched.password && errors.password && (
-                    <Text style={{ color: "red" }}>{errors.password}</Text>
-                  )}
-                </View>
-                <TouchableOpacity
-                  style={styles.registerButton}
-                  onPress={handleSubmit}
-                >
-                  <Text style={styles.registerButtonText}>Register</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Login Navigation Line */}
-              <Text
-                style={styles.signUpLinkText}
-                onPress={() => navigation.navigate("BudgetAddIntro")}
-              >
-                Already have an account?{" "}
-                <Text style={styles.signUpLink}>Login</Text>
+            <View style={styles.headerContainer}>
+              <Text style={styles.title}>Sign up</Text>
+              <Text style={styles.welcomeMessage}>
+                Hello, Welcome to Budget Buddy,
               </Text>
-            </>
-          )}
-        </Formik>
-      )}
+            </View>
+
+            {/* Form */}
+            <View style={styles.formContainer}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Username</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your username"
+                  onChangeText={handleChange("user_name")}
+                  onBlur={handleBlur("user_name")}
+                  value={values.user_name}
+                />
+                {touched.user_name && errors.user_name && (
+                  <Text style={{ color: "red" }}>{errors.user_name}</Text>
+                )}
+              </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  onChangeText={handleChange("email")}
+                  onBlur={handleBlur("email")}
+                  value={values.email}
+                />
+                {touched.email && errors.email && (
+                  <Text style={{ color: "red" }}>{errors.email}</Text>
+                )}
+              </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  style={styles.input}
+                  onChangeText={handleChange("password")}
+                  onBlur={handleBlur("password")}
+                  value={values.password}
+                  placeholder="Enter your password"
+                  secureTextEntry={true}
+                />
+                {touched.password && errors.password && (
+                  <Text style={{ color: "red" }}>{errors.password}</Text>
+                )}
+              </View>
+              <TouchableOpacity
+                style={styles.registerButton}
+                onPress={handleSubmit}
+              >
+                <Text style={styles.registerButtonText}>Register</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Login Navigation Line */}
+            <Text
+              style={styles.signUpLinkText}
+              onPress={() => navigation.navigate("Login")}
+            >
+              Already have an account?{" "}
+              <Text style={styles.signUpLink}>Login</Text>
+            </Text>
+          </>
+        )}
+      </Formik>
     </SafeAreaView>
   );
 };
@@ -180,7 +210,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff", // Background color
-    
   },
   logo: {
     width: 150,

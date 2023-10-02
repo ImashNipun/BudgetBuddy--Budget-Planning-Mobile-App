@@ -11,16 +11,17 @@ import {
 import React from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import secImg from "../../../assets/budget_input_sec_img.png"
+import secImg from "../../../assets/budget_input_sec_img.png";
 
-const BudgetInput = ({setTotalBudget}) => {
+const BudgetInput = ({ setTotalBudget,setBudgetRenewDate }) => {
   return (
-    <View style={{flex:1}}>
+    <View style={{ flex: 1 }}>
       <Formik
-        initialValues={{ budget_amount: "" }}
+        initialValues={{ budget_amount: "", budget_renew_date: "" }}
         validationSchema={validationSchema}
         onSubmit={(values) => {
-          setTotalBudget(values.budget_amount)
+          setTotalBudget(values.budget_amount);
+          setBudgetRenewDate(values.budget_renew_date);
           console.log(values);
         }}
       >
@@ -52,7 +53,7 @@ const BudgetInput = ({setTotalBudget}) => {
                 <Text style={styles.label}>Budget Amount</Text>
                 <TextInput
                   style={styles.input}
-                  keyboardType='numeric'
+                  keyboardType="numeric"
                   placeholder="Enter your budget amount"
                   onChangeText={handleChange("budget_amount")}
                   onBlur={handleBlur("budget_amount")}
@@ -66,14 +67,16 @@ const BudgetInput = ({setTotalBudget}) => {
                 <Text style={styles.label}>Budget Update Date</Text>
                 <TextInput
                   style={styles.input}
-                  keyboardType='numeric'
+                  keyboardType="numeric"
                   placeholder="Enter the monthly budget update date"
-                  onChangeText={handleChange("budget_update_date")}
-                  onBlur={handleBlur("budget_update_date")}
-                  value={values.budget_update_date}
+                  onChangeText={handleChange("budget_renew_date")}
+                  onBlur={handleBlur("budget_renew_date")}
+                  value={values.budget_renew_date}
                 />
-                {touched.budget_update_date && errors.budget_update_date && (
-                  <Text style={{ color: "red" }}>{errors.budget_update_date}</Text>
+                {touched.budget_renew_date && errors.budget_renew_date && (
+                  <Text style={{ color: "red" }}>
+                    {errors.budget_renew_date}
+                  </Text>
                 )}
               </View>
               <TouchableOpacity
@@ -94,7 +97,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    justifyContent:"center"
+    justifyContent: "center",
   },
   headerContainer: {
     alignItems: "flex-start", // Align title and welcome message to the left
@@ -156,7 +159,7 @@ const styles = StyleSheet.create({
 
 const validationSchema = Yup.object().shape({
   budget_amount: Yup.number().min(0).required("required"),
-  budget_update_date: Yup.number().min(0).required("required")
+  budget_renew_date: Yup.number().min(1).max(31).required("required"),
 });
 
 export default BudgetInput;

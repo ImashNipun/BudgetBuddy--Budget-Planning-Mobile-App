@@ -9,11 +9,14 @@ import {
 import React from "react";
 import logo from "../../assets/app_logo2.png";
 import heroimage from "../../assets/buget_hero.png";
+import useAuth from "../hooks/useAuth";
 
 const BudgetAddIntroScreen = ({ navigation }) => {
+  const {auth,onLogout} = useAuth();
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
+      <TouchableOpacity onPress={onLogout}><Text style={styles.title}>Logout</Text></TouchableOpacity>
         <Image source={logo} style={styles.logo} />
 
         <Image source={heroimage} style={styles.relatedImage} />
@@ -30,6 +33,7 @@ const BudgetAddIntroScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => navigation.navigate("BudgetSetup")}
+          //onPress={onLogout}
         >
           <Text style={styles.buttonText}>Setup My Budget</Text>
         </TouchableOpacity>

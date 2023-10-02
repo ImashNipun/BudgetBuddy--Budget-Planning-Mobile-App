@@ -9,29 +9,29 @@ import {
   StatusBar,
   KeyboardAvoidingView,
 } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import logo from "../../../assets/app_logo.png";
 import { Formik } from "formik";
 import * as Yup from "yup";
+import useAuth from "../../hooks/useAuth";
+import { useIsFocused } from "@react-navigation/native";
 
 const LoginScreen = ({ navigation }) => {
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_300Light,
-    Poppins_600SemiBold,
-  });
+  const { auth, onLogin, isBudgetExsist } = useAuth();
+  const isFocued = useIsFocused();
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  useEffect(() => {
+    
+    console.log("login screen change");
+  }, [isFocued,isBudgetExsist]);
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }}>
       <Formik
         initialValues={{ email: "", password: "" }}
         validationSchema={validationSchema}
-        onSubmit={(values) => {
-          // Handle form submission here
-          console.log(values);
+        onSubmit={async (values) => {
+          await onLogin(values.email, values.password);
         }}
       >
         {({
@@ -61,6 +61,7 @@ const LoginScreen = ({ navigation }) => {
                 <Text style={styles.label}>Email</Text>
                 <TextInput
                   style={styles.input}
+                  placeholder="Enter your email"
                   onChangeText={handleChange("email")}
                   onBlur={handleBlur("email")}
                   value={values.email}

@@ -1,14 +1,146 @@
-import React from "react";
-import { View, Text, FlatList, StyleSheet, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 import upimg from "../../../assets/up.png";
 import downimg from "../../../assets/down.png";
+import * as SecureStore from "expo-secure-store";
+import useAuth from "../../hooks/useAuth";
+import { useIsFocused } from "@react-navigation/native";
+import { config } from "../../config/config";
+import axios from "axios";
 
 const HomeScreen = () => {
-  // Sample data for budgets, expenses, and goals
-  const budgets = {
-    currentBalance: 150000,
-    totalBudget: 150000,
-    totalExpenses: 150000,
+  const isFocused = useIsFocused();
+  const { auth, onLogout } = useAuth();
+
+  const [budget, setBudget] = useState({
+    currentBalance: null,
+    totalBudget: null,
+    totalExpenses: null,
+  });
+  useEffect(() => {
+    async function getdata() {
+      try {
+        const user = await SecureStore.getItemAsync("USER_DETAILS");
+        console.log(user);
+      } catch (error) {
+        console.log("ERROR", error);
+      }
+    }
+
+    getdata();
+
+    console.log(auth ? auth : { message: "no auth" });
+  }, [auth, isFocused]);
+
+  useEffect(() => {
+    const getBudgetDetails = async () => {
+      try {
+        const result = await axios.get(
+          `${config.BASE_URL}/api/v1/budget/${auth?.user}`
+        );
+
+        const result_data = result?.data?.data;
+
+        if (result_data?.savings) {
+          setBudget((prev) => ({
+            ...prev,
+            totalBudget: result_data?.budget_amount,
+            totalExpenses: calculateTotalExpenses({
+              selected_categories: result_data?.selected_categories,
+              total_budget: result_data?.budget_amount,
+              isSaving: true,
+              savings_amount: result_data?.savings?.savings_amount,
+            }),
+            currentBalance:
+              result_data?.budget_amount -
+              result_data?.savings?.savings_amount -
+              calculateTotalExpenses({
+                selected_categories: result_data?.selected_categories,
+                total_budget: result_data?.budget_amount,
+                isSaving: true,
+                savings_amount: result_data?.savings?.savings_amount,
+              }),
+          }));
+        } else if (result_data?.custom_category) {
+          setBudget((prev) => ({
+            ...prev,
+            totalBudget: result_data?.budget_amount,
+            totalExpenses: calculateTotalExpenses({
+              selected_categories: result_data?.data?.selected_categories,
+              total_budget: result_data?.data?.budget_amount,
+              isCCategory: true,
+              c_category_amount: result_data?.custom_category?.remaining_amount,
+            }),
+            currentBalance:
+              result_data?.budget_amount -
+              calculateTotalExpenses({
+                selected_categories: result_data?.data?.selected_categories,
+                total_budget: result_data?.data?.budget_amount,
+                isCCategory: true,
+                c_category_amount:
+                  result_data?.custom_category?.remaining_amount,
+              }),
+          }));
+        } else {
+          setBudget((prev) => ({
+            ...prev,
+            totalBudget: result_data?.budget_amount,
+            totalExpenses: calculateTotalExpenses({
+              selected_categories: result_data?.selected_categories,
+              total_budget: result_data?.budget_amount,
+            }),
+            currentBalance:
+              result_data?.budget_amount -
+              calculateTotalExpenses({
+                selected_categories: result_data?.selected_categories,
+                total_budget: result_data?.budget_amount,
+              }),
+          }));
+        }
+      } catch (error) {
+        console.log(`Error:${error.message}`, error);
+      }
+    };
+
+    if (auth?.user) {
+      getBudgetDetails();
+    } else {
+    }
+  }, [isFocused]);
+
+  const calculateTotalExpenses = ({
+    selected_categories,
+    total_budget,
+    isCCategory = false,
+    c_category_amount,
+    isSaving = false,
+    savings_amount,
+  }) => {
+    let total_expense = 0;
+
+    if (isCCategory) {
+      for (const cat of selected_categories) {
+        total_expense += cat.remaining_amount;
+      }
+      return total_budget - (total_expense + c_category_amount);
+    } else if (isSaving) {
+      for (const cat of selected_categories) {
+        total_expense += cat.remaining_amount;
+      }
+      return total_budget - savings_amount - total_expense;
+    } else {
+      for (const cat of selected_categories) {
+        total_expense += cat.remaining_amount;
+      }
+      return total_budget - total_expense;
+    }
   };
 
   const expenses = [
@@ -45,27 +177,30 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       {/* Current Balance Card */}
+      <TouchableOpacity onPress={onLogout}>
+        <Text>Logout</Text>
+      </TouchableOpacity>
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Current Balance</Text>
-        <Text style={styles.cardValue}>Rs.{budgets.currentBalance}.00</Text>
+        <Text style={styles.cardValue}>Rs.{budget.currentBalance}.00</Text>
 
         {/* Total Budget and Total Expenses Cards */}
         <View style={styles.cardRow}>
           <View style={styles.innerCard}>
-            <Image source={upimg} style={styles.cardicon}/>
+            <Image source={upimg} style={styles.cardicon} />
             <View>
               <Text style={styles.cardTitleInner}>Total Income</Text>
               <Text style={styles.cardValueInner}>
-                Rs.{budgets.totalBudget}.00
+                Rs.{budget.totalBudget}.00
               </Text>
             </View>
           </View>
           <View style={styles.innerCard}>
-            <Image source={downimg} style={styles.cardicon}/>
+            <Image source={downimg} style={styles.cardicon} />
             <View>
               <Text style={styles.cardTitleInner}>Total Expenses</Text>
               <Text style={styles.cardValueInner}>
-                Rs.{budgets.totalExpenses}.00
+                Rs.{budget.totalExpenses}.00
               </Text>
             </View>
           </View>
@@ -123,7 +258,7 @@ const styles = StyleSheet.create({
   innerCard: {
     flex: 1,
     alignItems: "center",
-    flexDirection:"row",
+    flexDirection: "row",
     backgroundColor: "#8274BC",
     padding: 15,
     borderRadius: 8,
@@ -148,7 +283,7 @@ const styles = StyleSheet.create({
     fontSize: 27,
     color: "white",
     textAlign: "center",
-    marginTop:3
+    marginTop: 3,
   },
   cardValueInner: {
     fontSize: 14,
@@ -182,12 +317,12 @@ const styles = StyleSheet.create({
     marginRight: 3,
     borderRadius: 5,
   },
-  cardicon:{
-    width:25,
-    height:25,
-    marginRight:10,
-    objectFit:"contain"
-  }
+  cardicon: {
+    width: 25,
+    height: 25,
+    marginRight: 10,
+    objectFit: "contain",
+  },
 });
 
 export default HomeScreen;

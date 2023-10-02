@@ -1,14 +1,31 @@
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import React from "react";
 
-const CategoryCard = ({ toggleCategory, selectedCategories, category }) => {
+const CategoryCard = ({
+  toggleCategory,
+  selectedCategories,
+  category,
+  totalBudget,
+}) => {
+  const calculateEachCategoryAmount = (totalbudget, persentage) => {
+    let amount = Number(totalbudget) * (Number(persentage) / 100);
+    return amount;
+  };
   return (
     <TouchableOpacity
-      key={category.id}
-      onPress={() => toggleCategory(category.id)}
+      key={category._id}
+      onPress={() =>
+        toggleCategory(
+          category._id,
+          calculateEachCategoryAmount(totalBudget, category.percentage)
+        )
+      }
       style={[
         styles.categoryCard,
-        selectedCategories.includes(category.id) && styles.selectedCategoryCard,
+        //selectedCategories.includes(category._id)
+        selectedCategories.some(
+          (categoryObj) => categoryObj.category_id === category._id
+        ) && styles.selectedCategoryCard,
       ]}
     >
       <View style={styles.categoryContent}>
@@ -16,14 +33,20 @@ const CategoryCard = ({ toggleCategory, selectedCategories, category }) => {
           <View style={styles.categoryContentBottom}>
             <View style={styles.categoryContentTop}>
               <View style={styles.checkbox}>
-                {selectedCategories.includes(category.id) && (
-                  <Text style={styles.checkmark}>✓</Text>
-                )}
+                {
+                  //selectedCategories.includes(category._id)
+                  selectedCategories.some(
+                    (categoryObj) => categoryObj.category_id === category._id
+                  ) && <Text style={styles.checkmark}>✓</Text>
+                }
               </View>
-              <Text style={styles.categoryName}>{category.name}</Text>
+              <Text style={styles.categoryName}>{category.category_name}</Text>
             </View>
             <Text style={styles.categoryDescription}>
               {category.description}
+            </Text>
+            <Text>
+              {calculateEachCategoryAmount(totalBudget, category.percentage)}
             </Text>
           </View>
           <View style={styles.categoryIconView}>

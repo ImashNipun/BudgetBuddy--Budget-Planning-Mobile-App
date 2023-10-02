@@ -12,6 +12,7 @@ route.post(
   "/register",
   asyncHandler(async (req, res) => {
     const user_data = req.body;
+    console.log(req.body);
     const exist_user = await User.findOne({ email: user_data.email });
 
     if (exist_user) {
