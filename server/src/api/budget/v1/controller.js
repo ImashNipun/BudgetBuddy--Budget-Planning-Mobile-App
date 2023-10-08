@@ -42,12 +42,14 @@ router.post(
       }
 
       if (payload.custom_category) {
-        const { category_name, description, amount } = payload.custom_category;
+        const { category_name, description, initial_amount, remaining_amount } =
+          payload.custom_category;
         const custom_c_payload = {
           user_id: payload.user_id,
           category_name,
           description,
-          amount,
+          initial_amount,
+          remaining_amount,
         };
         const categoty = await CustomCategory.create(custom_c_payload);
 
