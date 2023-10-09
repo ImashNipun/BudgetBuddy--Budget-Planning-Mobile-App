@@ -69,20 +69,21 @@ const HomeScreen = () => {
               }),
           }));
         } else if (result_data?.custom_category) {
+          console.log(result_data);
           setBudget((prev) => ({
             ...prev,
             totalBudget: result_data?.budget_amount,
             totalExpenses: calculateTotalExpenses({
-              selected_categories: result_data?.data?.selected_categories,
-              total_budget: result_data?.data?.budget_amount,
+              selected_categories: result_data?.selected_categories,
+              total_budget: result_data?.budget_amount,
               isCCategory: true,
               c_category_amount: result_data?.custom_category?.remaining_amount,
             }),
             currentBalance:
               result_data?.budget_amount -
               calculateTotalExpenses({
-                selected_categories: result_data?.data?.selected_categories,
-                total_budget: result_data?.data?.budget_amount,
+                selected_categories: result_data?.selected_categories,
+                total_budget: result_data?.budget_amount,
                 isCCategory: true,
                 c_category_amount:
                   result_data?.custom_category?.remaining_amount,
