@@ -107,7 +107,8 @@ const CustomCategorySelect = ({
           const custom_category = {
             category_name: categoryName,
             description: description,
-            amount: Number(remaningBudget),
+            initial_amount: Number(remaningBudget),
+            remaining_amount: Number(remaningBudget),
           };
           const custom_category_payload = {
             user_id,
