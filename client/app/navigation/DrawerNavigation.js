@@ -7,17 +7,53 @@ import {
   DrawerItem,
 } from "@react-navigation/drawer";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useNavigation, CommonActions } from "@react-navigation/native";
 import HomeScreen from "../screens/common/HomeScreen";
 import BudgetScreen from "../screens/common/BudgetScreen";
 import SavingsScreen from "../screens/common/SavingsScreen";
 import { FontAwesome5 } from "@expo/vector-icons"; // Import icons from FontAwesome5
 import useAuth from "../hooks/useAuth";
+import ExpenseScreen from "../screens/expense/ExpenseScreen";
+import SingleExpenseCategory from "../screens/expense/SingleExpenseCategory";
+import AddExpenseWithCategory from "../screens/expense/AddExpenseWithCategory";
 
 const Drawer = createDrawerNavigator();
-const Stack = createNativeStackNavigator();
+
+const ExpenseStack = createNativeStackNavigator();
+const GoalsStack = createNativeStackNavigator();
+
+const ExpenseScreenStack = () => (
+  <ExpenseStack.Navigator
+    screenOptions={{
+      headerShown: false,
+    }}
+  >
+    <ExpenseStack.Screen
+      name="AllExpenseCategories"
+      component={ExpenseScreen}
+    />
+    <ExpenseStack.Screen
+      name="AddExpensesWithCategory"
+      component={AddExpenseWithCategory}
+    />
+    <ExpenseStack.Screen
+      name="SingleExpenseCategory"
+      component={SingleExpenseCategory}
+    />
+    {/* Add other screens for the Expense stack as needed */}
+  </ExpenseStack.Navigator>
+);
+
+// const GoalsScreenStack = () => (
+//   <GoalsStack.Navigator>
+//     <GoalsStack.Screen name="Goals" component={GoalsScreen} />
+//     {/* Add other screens for the Goals stack as needed */}
+//   </GoalsStack.Navigator>
+// );
 
 const CustomDrawerContent = (props) => {
-  const { auth} = useAuth()
+  const { auth } = useAuth();
+
   return (
     <DrawerContentScrollView {...props}>
       <View
@@ -63,9 +99,12 @@ const DrawerNavigation = () => {
     <Drawer.Navigator
       initialRouteName="Home"
       drawerContentOptions={{
-        activeBackgroundColor: "purple", // Selected drawer background color
+        activeBackgroundColor: "red", // Selected drawer background color
         activeTintColor: "green", // Selected icon and text color
         inactiveTintColor: "green", // Inactive icon and text color
+      }}
+      screenOptions={{
+        headerShown: true,
       }}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
@@ -73,25 +112,57 @@ const DrawerNavigation = () => {
         name="Home"
         component={HomeScreen}
         options={{
-          drawerIcon: ({ color }) => <FontAwesome5 name="home" size={24} color={color}/>,
+          drawerIcon: ({ color }) => (
+            <FontAwesome5 name="home" size={24} color={color} />
+          ),
         }}
       />
       <Drawer.Screen
         name="Budget"
         component={BudgetScreen}
         options={{
-          drawerIcon: ({ color }) => <FontAwesome5 name="money-bill" size={24} color={color} />,
+          drawerIcon: ({ color }) => (
+            <FontAwesome5 name="wallet" size={24} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="Expenses"
+        component={ExpenseScreenStack}
+        options={{
+          drawerIcon: ({ color }) => (
+            <FontAwesome5 name="money-bill" size={24} color={color} />
+          ),
         }}
       />
       <Drawer.Screen
         name="Savings"
         component={SavingsScreen}
         options={{
-          drawerIcon: ({ color }) => <FontAwesome5 name="piggy-bank" size={24} color={color}/>,
+          drawerIcon: ({ color }) => (
+            <FontAwesome5 name="piggy-bank" size={24} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="Goals"
+        component={SavingsScreen}
+        options={{
+          drawerIcon: ({ color }) => (
+            <FontAwesome5 name="bullseye" size={24} color={color} />
+          ),
         }}
       />
     </Drawer.Navigator>
   );
+};
+
+const ExpensesRoute = () => {
+  <Stack.Navigator>
+    <Stack.Screen name="BudgetAddIntro" component={BudgetAddIntroScreen} />
+    <Stack.Screen name="BudgetAddIntro" component={BudgetAddIntroScreen} />
+    <Stack.Screen name="BudgetAddIntro" component={BudgetAddIntroScreen} />
+  </Stack.Navigator>;
 };
 
 export default DrawerNavigation;
