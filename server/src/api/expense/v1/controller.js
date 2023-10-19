@@ -112,7 +112,7 @@ router.post(
 );
 
 router.get(
-  "/:id",
+  "/user/:id",
   asynchandler(async (req, res) => {
     const user_id = req.params.id;
 
@@ -125,6 +125,40 @@ router.get(
       status: 200,
       data: expenses,
     });
+  })
+);
+
+router.get(
+  "/single-category",
+  asynchandler(async (req, res) => {
+    const user_id = req.query.uid;
+    const category_id = req.query.cid;
+    const is_custom_category = req.query.is_custom_category;
+
+    if (is_custom_category == "false") {
+      console.log("gygy");
+      const expenses = await Expense.find({
+        user_id: user_id,
+        expense_category: category_id,
+      }).populate({ path: "expense_category" });
+
+      return response({
+        res,
+        status: 200,
+        data: expenses,
+      });
+    } else {
+      const expenses = await Expense.find({
+        user_id: user_id,
+        custom_category_id: category_id,
+      }).populate({ path: "custom_category_id" });
+
+      return response({
+        res,
+        status: 200,
+        data: expenses,
+      });
+    }
   })
 );
 
