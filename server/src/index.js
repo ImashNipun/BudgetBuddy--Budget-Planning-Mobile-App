@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
+import bodyParser from 'body-parser'
 import apiRouter from "./api";
 import config from "./config";
 import { authenticator, errorHandler } from "./middleware";
@@ -12,7 +13,9 @@ app.use(
     origin: "*",
   })
 );
-app.use(express.json());
+//app.use(express.json());
+app.use(bodyParser.json({ limit: '100mb' }));
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 app.set("trust proxy", 1);
 
 

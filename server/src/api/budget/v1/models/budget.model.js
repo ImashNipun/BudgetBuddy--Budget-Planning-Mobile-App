@@ -32,13 +32,21 @@ const budgetSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "CustomCategory",
     },
-    savings:{
+    savings: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Savings",
     },
     budget_renew_date: {
       type: Number,
       required: true,
+    },
+    next_budget_renew_date: {
+      type: Date,
+      required: true,
+    },
+    budget_expired: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
