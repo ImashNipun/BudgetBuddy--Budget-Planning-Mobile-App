@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import React, { useEffect } from "react";
+import { View, Text, Image, Alert } from "react-native";
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
@@ -16,6 +16,11 @@ import useAuth from "../hooks/useAuth";
 import ExpenseScreen from "../screens/expense/ExpenseScreen";
 import SingleExpenseCategory from "../screens/expense/SingleExpenseCategory";
 import AddExpenseWithCategory from "../screens/expense/AddExpenseWithCategory";
+import AddGoalScreen from "../screens/goals/AddGoalScreen";
+import GoalsScreen from "../screens/goals/GoalsScreen";
+import Chart from "../screens/analytics/Chart";
+import { config } from "../config/config";
+import axios from "axios";
 
 const Drawer = createDrawerNavigator();
 
@@ -44,22 +49,53 @@ const ExpenseScreenStack = () => (
   </ExpenseStack.Navigator>
 );
 
-// const GoalsScreenStack = () => (
-//   <GoalsStack.Navigator>
-//     <GoalsStack.Screen name="Goals" component={GoalsScreen} />
-//     {/* Add other screens for the Goals stack as needed */}
-//   </GoalsStack.Navigator>
-// );
+const GoalScreenStack = () => {
+  return (
+    <GoalsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <GoalsStack.Screen name="AllGoals" component={GoalsScreen} />
+      <GoalsStack.Screen name="AddGoals" component={AddGoalScreen} />
+    </GoalsStack.Navigator>
+  );
+};
 
 const CustomDrawerContent = (props) => {
-  const { auth } = useAuth();
+  const { auth, onLogout } = useAuth();
+  const [user, setUser] = React.useState(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const response = await axios.get(
+          `${config.BASE_URL}/api/v1/user/${auth?.user}`
+        );
+
+        setUser(response?.data?.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    getUser();
+  }, [auth]);
 
   return (
-    <DrawerContentScrollView {...props}>
+    <DrawerContentScrollView
+      {...props}
+      contentContainerStyle={{
+        flex: 1,
+        flexDirection: "column",
+        justifyContent: "space-between",
+      }}
+    >
       <View
         style={{
           alignItems: "center",
-          marginTop: 20,
+          marginTop: 30,
+          marginBottom: "auto",
           objectFit: "cover",
         }}
       >
@@ -68,26 +104,39 @@ const CustomDrawerContent = (props) => {
           source={require("../../assets/profile.png")} // Replace with your image source
           style={{ width: 100, height: 100, borderRadius: 50 }}
         />
-        <Text style={{ marginTop: 10 }}>name</Text>
+        <Text style={{ marginTop: 10 }}>{user && user?.user_name}</Text>
       </View>
 
       <View>
         <DrawerItemList {...props} />
       </View>
+
       <DrawerItem
         label="Logout"
         icon={() => <FontAwesome5 name="sign-out-alt" size={24} />}
         onPress={() => {
-          // Implement your logout logic here
+          Alert.alert("Logout", "Are you sure you want to logout?", [
+            {
+              text: "Cancel",
+              onPress: () => console.log("Cancel Pressed"),
+              style: "cancel",
+            },
+            {
+              text: "Logout",
+              onPress: () => {
+                onLogout();
+              },
+            },
+          ]);
         }}
       />
       <View
-        style={{ marginTop: "auto", alignItems: "center", marginBottom: 20 }}
+        style={{ marginTop: "auto", alignItems: "center", marginBottom: 10 }}
       >
         {/* Add your logo at the bottom */}
         <Image
           source={require("../../assets/app_logo2.png")} // Replace with your logo source
-          style={{ width: 50, height: 50, objectFit: "contain" }}
+          style={{ width: 100, height: 100, objectFit: "contain" }}
         />
       </View>
     </DrawerContentScrollView>
@@ -98,12 +147,10 @@ const DrawerNavigation = () => {
   return (
     <Drawer.Navigator
       initialRouteName="Home"
-      drawerContentOptions={{
+      screenOptions={{
         activeBackgroundColor: "red", // Selected drawer background color
         activeTintColor: "green", // Selected icon and text color
         inactiveTintColor: "green", // Inactive icon and text color
-      }}
-      screenOptions={{
         headerShown: true,
       }}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -146,23 +193,33 @@ const DrawerNavigation = () => {
       />
       <Drawer.Screen
         name="Goals"
-        component={SavingsScreen}
+        component={GoalScreenStack}
         options={{
           drawerIcon: ({ color }) => (
             <FontAwesome5 name="bullseye" size={24} color={color} />
           ),
         }}
       />
+      <Drawer.Screen
+        name="Analytics"
+        component={Chart}
+        options={{
+          drawerIcon: ({ color }) => (
+            <FontAwesome5 name="chart-line" size={24} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="Notifications"
+        component={Chart}
+        options={{
+          drawerIcon: ({ color }) => (
+            <FontAwesome5 name="bell" size={24} color={color} />
+          ),
+        }}
+      />
     </Drawer.Navigator>
   );
-};
-
-const ExpensesRoute = () => {
-  <Stack.Navigator>
-    <Stack.Screen name="BudgetAddIntro" component={BudgetAddIntroScreen} />
-    <Stack.Screen name="BudgetAddIntro" component={BudgetAddIntroScreen} />
-    <Stack.Screen name="BudgetAddIntro" component={BudgetAddIntroScreen} />
-  </Stack.Navigator>;
 };
 
 export default DrawerNavigation;
