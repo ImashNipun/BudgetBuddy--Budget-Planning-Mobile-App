@@ -1,5 +1,4 @@
 import {
-  SafeAreaView,
   View,
   Text,
   TextInput,
@@ -7,62 +6,36 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  KeyboardAvoidingView,
-  Button,
-  Modal,
+  ScrollView,
+  Alert,
 } from "react-native";
-import React, { useState } from "react";
+import { Picker } from "@react-native-picker/picker";
+import React, { useEffect, useState } from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import DropDownPicker from "react-native-dropdown-picker";
 import CheckBox from "expo-checkbox";
 import * as ImagePicker from "expo-image-picker";
-import DatePicker from "expo-datepicker";
+import useAuth from "../../hooks/useAuth";
+import axios from "axios";
+import { config } from "../../config/config";
+
 import SelectOrTakeImageModel from "../../components/expense/SelectOrTakeImageModel";
 import SelectDateAndTimeModel from "../../components/expense/SelectDateAndTimeModel";
 
 const image =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAACXBIWXMAAAsTAAALEwEAmpwYAAABQ0lEQVR4nO3bzUrDQBQF4OrCKvjeCoIUEeqqD+FCfCLdiIo/uDwS6E4wCdTcsfm+bWFyOSdMQqddLAAAAAAAAAAAAIARkiyTXCR5SvKRZJ3kRIjThX+Xn26muP6s/RJ+5616vjmH33mtnnHO4Xcuq+ecc/jd58vqWfdOkqMktz3h3yc5rp517wi/kPALCb+Q8AsJv5DwCwm/kPALCb+Q8AsJv5DwCwm//a+UGeclyfWgs/Ak5yMXZ7j+s/AkjyMWZJzPJId9BTyMXJQdF3A2YkHGWQ/ZgjyEd+85ydXgH6R5DW2AEhqghAYooQFKaIASGqCEBiihAUpogBIaoIQGKKEBSmiAEhrgL0r/p4RV9ZxzL+E9yUH1nHMu4av3bJQ/LWEj32lLWG23ne7O3yQ5ner6bHV7vn0fAAAAAAAAAAAWU/gGhKtHrQIgGN4AAAAASUVORK5CYII=";
 
-const AddExpenseWithCategory = ({ navigation }) => {
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(null);
-  const [items, setItems] = useState([
-    { label: "Apple", value: "apple" },
-    { label: "Banana", value: "banana" },
-  ]);
-
-  const [isPickerVisible, setPickerVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
-
+const AddExpenseWithCategory = ({ route, navigation }) => {
+  const { allCategories, customCategory, cat_id } = route.params;
+  const { auth, onLogout } = useAuth();
+  const [items, setItems] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState(new Date());
   const [isChecked, setIsChecked] = useState(false);
-
-  const showPicker = () => {
-    setPickerVisible(true);
-  };
-
-  const hidePicker = () => {
-    setPickerVisible(false);
-  };
-
-  const handleConfirm = (date) => {
-    setSelectedDate(date);
-    hidePicker();
-  };
-  // const [type, setType] = useState(CameraType.back);
-  // const [permission, requestPermission] = Camera.useCameraPermissions();
-
-  // // if (!permission) ...
-
-  // // if (!permission.granted) ...
-
-  // function toggleCameraType() {
-  //   setType((current) =>
-  //     current === CameraType.back ? CameraType.front : CameraType.back
-  //   );
-  // }
-
   const [modalVisible, setModalVisible] = useState(false);
+  const [billImage, setBillImage] = useState(null);
+
+  //console.log(customCategory);
 
   const toggleModal = () => {
     setModalVisible(!modalVisible);
@@ -74,7 +47,7 @@ const AddExpenseWithCategory = ({ navigation }) => {
       base64: true,
     });
     if (!result.canceled) {
-      // Handle the selected image here
+      setBillImage(result?.assets[0]?.base64);
       console.log(result.assets[0].base64);
     }
   };
@@ -85,7 +58,7 @@ const AddExpenseWithCategory = ({ navigation }) => {
       base64: true,
     });
     if (!result.canceled) {
-      // Handle the taken picture here
+      setBillImage(result?.assets[0]?.base64);
       console.log(result.assets[0].base64);
     }
   };
@@ -94,8 +67,45 @@ const AddExpenseWithCategory = ({ navigation }) => {
     navigation.navigate("AllExpenseCategories");
   };
 
+  useEffect(() => {
+    setItems([]);
+    if (customCategory) {
+      if (allCategories) {
+        setItems((prev) => [
+          ...prev,
+          { label: "Select a category", value: "" },
+        ]);
+        const newItems = allCategories.map((allc) => ({
+          label: allc?.category_id?.category_name,
+          value: allc?.category_id?._id,
+        }));
+        newItems.push({
+          label: customCategory?.category_name,
+          value: customCategory?._id,
+        });
+        setItems((prevItems) => [...prevItems, ...newItems]);
+      } else {
+        setItems([]);
+      }
+    } else {
+      if (allCategories) {
+        setItems((prev) => [
+          ...prev,
+          { label: "Select a category", value: "" },
+        ]);
+        const newItems = allCategories.map((allc) => ({
+          label: allc?.category_id?.category_name,
+          value: allc?.category_id?._id,
+        }));
+        setItems((prevItems) => [...prevItems, ...newItems]);
+      } else {
+        setItems([]);
+      }
+    }
+  }, []);
+
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }}>
+    <ScrollView>
       <TouchableOpacity
         style={{
           flexDirection: "row",
@@ -130,14 +140,146 @@ const AddExpenseWithCategory = ({ navigation }) => {
       </TouchableOpacity>
       <Formik
         initialValues={{
+          expense_category: cat_id ? cat_id : "",
           expense_name: "",
           expense_amount: "",
           description: "",
         }}
         validationSchema={validationSchema}
-        onSubmit={(values) => {
-          // Handle form submission here
-          console.log(values);
+        onSubmit={async (values) => {
+          let expense_date = selectedDate.toLocaleDateString();
+          let expense_time = selectedTime.toLocaleTimeString(undefined, {
+            hour12: true,
+          });
+          let custom_category = false;
+          let budget_extended = false;
+          let press_ok = false;
+
+          if (customCategory?._id == values.expense_category) {
+            custom_category = true;
+          }
+
+          if (!isChecked) {
+            const e_date = new Date();
+
+            expense_date = e_date.toDateString();
+            // expense_time = e_date.toTimeString(undefined, {
+            //   hour12: true,
+            // });
+            const hours = e_date.getHours();
+            const minutes = e_date.getMinutes();
+            const seconds = e_date.getSeconds();
+
+            // Determine whether it's AM or PM
+            const period = hours < 12 ? "AM" : "PM";
+
+            // Convert hours from 24-hour format to 12-hour format
+            const formattedHours = hours % 12 || 12;
+
+            expense_time = `${formattedHours}:${minutes}:${seconds} ${period}`;
+          }
+
+          if (customCategory?._id == values.expense_category) {
+            if (
+              customCategory.remaining_amount < Number(values.expense_amount)
+            ) {
+              Alert.alert(
+                "Somthing went wrong!",
+                `You don't have enough money to log the expense. However you want to log the expense.`,
+                [
+                  {
+                    text: "No",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel",
+                  },
+                  {
+                    text: "Yes",
+                    onPress: () => {
+                      budget_extended = !budget_extended;
+                      press_ok = !press_ok;
+                    },
+                  },
+                ]
+              );
+            } else {
+              press_ok = !press_ok;
+            }
+          } else {
+            const foundObject = allCategories.find(
+              (obj) => obj.category_id._id === values.expense_category
+            );
+
+            if (foundObject) {
+              const remainingAmount = foundObject.remaining_amount;
+
+              if (remainingAmount < Number(values.expense_amount)) {
+                Alert.alert(
+                  "Somthing went wrong!",
+                  `You don't have enough money to log the expense. However you want to log the expense.`,
+                  [
+                    {
+                      text: "No",
+                      onPress: () => console.log("Cancel Pressed"),
+                      style: "cancel",
+                    },
+                    {
+                      text: "Yes",
+                      onPress: () => {
+                        budget_extended = !budget_extended;
+                        press_ok = !press_ok;
+                      },
+                    },
+                  ]
+                );
+              } else {
+                press_ok = !press_ok;
+              }
+            } else {
+              Alert.alert("Somthing went wrong!", `hhh`, [
+                {
+                  text: "Cancel",
+                  onPress: () => console.log("Cancel Pressed"),
+                  style: "cancel",
+                },
+                { text: "OK", onPress: () => console.log("Cancel Pressed") },
+              ]);
+            }
+          }
+
+          const payload = {
+            ...values,
+            user_id: auth?.user,
+            custom_category,
+            bill_image: billImage,
+            expense_date,
+            expense_time,
+            budget_extended,
+          };
+          if (press_ok) {
+            try {
+              const result = await axios.post(
+                `${config.BASE_URL}/api/v1/expense/`,
+                payload
+              );
+              console.log(result);
+              if (result.status == 201) {
+                Alert.alert("Congratulations!", `${result.data.message}`, [
+                  {
+                    text: "OK",
+                    onPress: () => navigation.navigate("AllExpenseCategories"),
+                  },
+                ]);
+              }
+            } catch (error) {
+              Alert.alert("Somthing went wrong!", `${error?.response?.data?.message}`, [
+                {
+                  text: "OK",
+                  onPress: () => navigation.navigate("AllExpenseCategories"),
+                },
+              ]);
+              console.log(error);
+            }
+          }
         }}
       >
         {({
@@ -147,6 +289,7 @@ const AddExpenseWithCategory = ({ navigation }) => {
           values,
           errors,
           touched,
+          setFieldValue,
         }) => (
           <View style={styles.container}>
             <StatusBar backgroundColor="#8373C1" />
@@ -160,14 +303,32 @@ const AddExpenseWithCategory = ({ navigation }) => {
             <View style={styles.formContainer}>
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Category*</Text>
-                <DropDownPicker
-                  open={open}
-                  value={value}
-                  items={items}
-                  setOpen={setOpen}
-                  setValue={setValue}
-                  setItems={setItems}
-                />
+
+                <Picker
+                  enabled={cat_id ? false : true}
+                  selectedValue={values.expense_category}
+                  onValueChange={(itemValue, itemIndex) =>
+                    setFieldValue("expense_category", itemValue)
+                  }
+                  onBlur={handleBlur("expense_category")}
+                >
+                  {items
+                    ? items.map((item, index) => {
+                        return (
+                          <Picker.Item
+                            key={index}
+                            label={item.label}
+                            value={item.value}
+                          />
+                        );
+                      })
+                    : null}
+                </Picker>
+                {errors.expense_category && (
+                  <Text style={{ color: "red" }}>
+                    {errors.expense_category}
+                  </Text>
+                )}
               </View>
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Name of the Expense*</Text>
@@ -233,7 +394,22 @@ const AddExpenseWithCategory = ({ navigation }) => {
                   I need to add a custom date and time
                 </Text>
               </View>
-              
+
+              <SelectOrTakeImageModel
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                onTakePicture={handleTakePicture}
+                onSelectPicture={handleSelectPicture}
+              />
+              {isChecked && (
+                <SelectDateAndTimeModel
+                  selectedDate={selectedDate}
+                  setSelectedDate={setSelectedDate}
+                  selectedTime={selectedTime}
+                  setSelectedTime={setSelectedTime}
+                />
+              )}
+
               <TouchableOpacity
                 style={styles.loginButton}
                 onPress={handleSubmit}
@@ -244,14 +420,7 @@ const AddExpenseWithCategory = ({ navigation }) => {
           </View>
         )}
       </Formik>
-      <SelectOrTakeImageModel
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onTakePicture={handleTakePicture}
-        onSelectPicture={handleSelectPicture}
-      />
-      {isChecked && <SelectDateAndTimeModel />}
-    </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 
@@ -357,10 +526,12 @@ const styles = StyleSheet.create({
 });
 
 const validationSchema = Yup.object().shape({
-  email: Yup.string().email("Invalid email").required("Email is required"),
-  password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
+  expense_category: Yup.string().required("Email is required"),
+  expense_name: Yup.string().required("Name of the Expense is required"),
+  expense_amount: Yup.number()
+    .required("Amount is required")
+    .min(0, "Amount must be a positive number"),
+  description: Yup.string().required("Description is required"),
 });
 
 export default AddExpenseWithCategory;

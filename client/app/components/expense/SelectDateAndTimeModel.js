@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
-export default function SelectDateAndTimeModel() {
+export default function SelectDateAndTimeModel({
+  selectedDate,
+  setSelectedDate,
+  selectedTime,
+  setSelectedTime,
+}) {
   const [showDatePicker, setShowDatePicker] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState(new Date());
 
   const handleDateChange = (event, selectedDate) => {
-    
     setShowDatePicker(false);
     if (selectedDate) {
       setSelectedDate(selectedDate);

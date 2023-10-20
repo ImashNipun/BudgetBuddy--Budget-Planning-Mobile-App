@@ -4,12 +4,12 @@ import { View, Modal, Text, TouchableOpacity } from 'react-native';
 const SelectOrTakeImageModel = ({ visible, onClose, onTakePicture, onSelectPicture }) => {
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center',backgroundColor: "rgba(0, 0, 0, 0.5)", }}>
         <View
           style={{
             backgroundColor: 'white',
