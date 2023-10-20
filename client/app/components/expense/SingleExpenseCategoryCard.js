@@ -1,37 +1,77 @@
 // ExpenseCategoryCard.js
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import * as Progress from "react-native-progress";
 
-export const SingleExpenseCategoryCard = ({ items }) => {
+
+export const SingleExpenseCategoryCard = ({
+  data,
+  custom_cat,
+  navigation,
+  allCategories,
+  customCategory,
+  setShareAmountModelVisibel,
+}) => {
+  const calculatePersentage = () => {
+    return data.remaining_amount / data.initial_amount;
+  };
+
+  const handleAddExpenseScreen = () => {
+    navigation.navigate("AddExpensesWithCategory", {
+      allCategories,
+      customCategory,
+      cat_id: custom_cat ? data._id : data.category_id._id,
+    });
+  };
+
+  const progress = calculatePersentage().toFixed(2);
   return (
     <View style={styles.cardContainer}>
       <View style={styles.categoryInfo}>
         <View style={styles.topRowLeft}>
           <Image
             style={styles.selectedCategoryIcon}
-            source={{ uri: items.icon }}
+            source={{ uri: custom_cat ? data.icon : data?.category_id?.icon }}
           />
-          <Text style={styles.categoryName}>{items.name}</Text>
+          <Text style={styles.categoryName}>
+            {custom_cat ? data.category_name : data.category_id.category_name}
+          </Text>
         </View>
-        <Text style={styles.categoryPrice}>Rs.10,000.00</Text>
+        <Text style={styles.categoryPrice}>Rs.{data.remaining_amount}.00</Text>
       </View>
       <View style={styles.middleRow}>
-        <Text style={styles.categoryDescription}>{items.description}</Text>
+        <Text style={styles.categoryDescription}>
+          {custom_cat ? data.description : data.category_id.description}
+        </Text>
       </View>
       <View style={styles.bottomRow}>
         <Text style={styles.moneyLeftText}>Money left - Rs</Text>
-        <Text style={styles.moneyLeftAmount}>1000</Text>
+        <Text style={styles.moneyLeftAmount}>
+          {data.remaining_amount}/{data.initial_amount}
+        </Text>
       </View>
       <View style={styles.progressBar}>
-        <Progress.Bar progress={1} width={330} height={8} color="green" />
+        <Progress.Bar
+          progress={Number(progress)}
+          width={330}
+          height={8}
+          color="green"
+        />
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.mainButton}>
+        <TouchableOpacity
+          style={styles.mainButton}
+          onPress={handleAddExpenseScreen}
+        >
           <Text style={styles.mainButtonText}>Add an Expense</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.mainOutlineButton}>
-          <Text style={styles.mainOutlineButtonText}>Share Amount</Text>
+          <Text
+            style={styles.mainOutlineButtonText}
+            onPress={() => setShareAmountModelVisibel(true)}
+          >
+            Share Amount
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -49,7 +89,7 @@ const styles = StyleSheet.create({
   categoryInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems:"center"
+    alignItems: "center",
   },
   categoryName: {
     fontSize: 18,
@@ -92,10 +132,10 @@ const styles = StyleSheet.create({
   },
   mainButton: {
     backgroundColor: "#8274BC",
-    paddingTop:7,
-    paddingBottom:7,
-    paddingLeft:30,
-    paddingRight:30,
+    paddingTop: 7,
+    paddingBottom: 7,
+    paddingLeft: 30,
+    paddingRight: 30,
     borderRadius: 5,
   },
   mainButtonText: {
@@ -104,13 +144,13 @@ const styles = StyleSheet.create({
     color: "white",
   },
   mainOutlineButton: {
-    paddingTop:7,
-    paddingBottom:7,
-    paddingLeft:30,
-    paddingRight:30,
+    paddingTop: 7,
+    paddingBottom: 7,
+    paddingLeft: 30,
+    paddingRight: 30,
     borderRadius: 5,
-    borderColor:"#8274BC",
-    borderWidth:1
+    borderColor: "#8274BC",
+    borderWidth: 1,
   },
   mainOutlineButtonText: {
     textAlign: "center",
