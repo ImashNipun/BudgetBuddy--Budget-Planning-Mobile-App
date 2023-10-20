@@ -29,6 +29,17 @@ const BudgetCategorySelect = ({
   const [allCategories, setAllCategories] = useState([]);
   const [remaningBudget, setRemaningBudget] = useState(0);
 
+  function getNextMonthDate(selectedDay) {
+    const today = new Date();
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    
+    nextMonth.setDate(Math.min(selectedDay, new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate()));
+  
+    return nextMonth;
+  }
+  
+
   const onClose = () => {
     setModelVisible(false);
   };
@@ -43,6 +54,7 @@ const BudgetCategorySelect = ({
         budget_amount: Number(totalBudget),
         selected_categories: selectedCategories,
         budget_renew_date: Number(budgetRenewDate),
+        next_budget_renew_date: getNextMonthDate(Number(budgetRenewDate)),
       };
       try {
         const result = await axios.post(

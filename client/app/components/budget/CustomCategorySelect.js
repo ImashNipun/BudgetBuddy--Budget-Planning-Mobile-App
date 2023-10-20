@@ -36,11 +36,20 @@ const CustomCategorySelect = ({
   selected_categories,
   budget_renew_date,
 }) => {
-  const { checkBugetExist } = useAuth;
   const [selectedOption, setSelectedOption] = useState(1);
   const [categoryName, setCategoryName] = useState("");
   const [description, setDescription] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
+
+  function getNextMonthDate(selectedDay) {
+    const today = new Date();
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    
+    nextMonth.setDate(Math.min(selectedDay, new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate()));
+  
+    return nextMonth;
+  }
 
   const handleOptionChange = (option) => {
     setSelectedOption(option);
@@ -62,6 +71,7 @@ const CustomCategorySelect = ({
           selected_categories,
           savings: remaningBudget,
           budget_renew_date,
+          next_budget_renew_date: getNextMonthDate(Number(budget_renew_date)),
         };
 
         const handleSavingsSubmit = async () => {
@@ -116,6 +126,7 @@ const CustomCategorySelect = ({
             selected_categories,
             custom_category,
             budget_renew_date,
+            next_budget_renew_date: getNextMonthDate(Number(budget_renew_date)),
           };
 
           const handleCustomCategorySubmit = async () => {

@@ -13,7 +13,7 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import secImg from "../../../assets/budget_input_sec_img.png";
 
-const BudgetInput = ({ setTotalBudget,setBudgetRenewDate }) => {
+const BudgetInput = ({ setTotalBudget, setBudgetRenewDate }) => {
   return (
     <View style={{ flex: 1 }}>
       <Formik
@@ -159,7 +159,38 @@ const styles = StyleSheet.create({
 
 const validationSchema = Yup.object().shape({
   budget_amount: Yup.number().min(0).required("required"),
-  budget_renew_date: Yup.number().min(1).max(31).required("required"),
+  budget_renew_date: Yup.number()
+    .typeError("Budget update day must be a number")
+    .min(1, "Budget update day must be between 1 and 28")
+    .max(28, "Budget update day must be between 1 and 28")
+    .test({
+      name: "is-valid-day",
+      message: "Invalid day",
+      test: function (value) {
+        const currentDay = new Date().getDate();
+
+        if (
+          currentDay === 28 ||
+          currentDay === 29 ||
+          currentDay === 30 ||
+          currentDay === 31
+        ) {
+          if (value === 28) {
+            return true; // Allow 28
+          }
+          return this.createError({
+            message: `Only 28 is allowed on the ${value}th day`,
+          });
+        } else if (value >= currentDay) {
+          return true; // Allow values greater than or equal to the current day
+        } else {
+          return this.createError({
+            message:
+              "Update day must be greater than or equal to the current day",
+          });
+        }
+      },
+    }),
 });
 
 export default BudgetInput;
