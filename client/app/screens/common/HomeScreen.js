@@ -14,6 +14,9 @@ import useAuth from "../../hooks/useAuth";
 import { useIsFocused } from "@react-navigation/native";
 import { config } from "../../config/config";
 import axios from "axios";
+import ExpenseCard from "../../components/expense/ExpenseCard";
+import SmallGoalCard from "../../components/goal/SmallGoalCard";
+import SingleExpenseModal from "../../components/expense/SingleExpenseModal";
 
 const HomeScreen = () => {
   const isFocused = useIsFocused();
@@ -24,6 +27,12 @@ const HomeScreen = () => {
     totalBudget: null,
     totalExpenses: null,
   });
+
+  const [expenses, setExpenses] = useState([]);
+  const [singleExpenseModalVisible, setSingleExpenseModalVisible] =
+    useState(false);
+  const [expenseModalData, setExpenseModalData] = useState(null);
+  const [goals, setGoals] = useState(null);
   useEffect(() => {
     async function getdata() {
       try {
@@ -144,43 +153,55 @@ const HomeScreen = () => {
     }
   };
 
-  const expenses = [
-    { id: "1", description: "Groceries", amount: 200 },
-    { id: "2", description: "Utilities", amount: 300 },
-    { id: "3", description: "Utilities", amount: 300 },
-    { id: "4", description: "Utilities", amount: 300 },
-    { id: "5", description: "Utilities", amount: 300 },
-    { id: "6", description: "Utilities", amount: 300 },
-    { id: "7", description: "Utilities", amount: 300 },
-    { id: "8", description: "Utilities", amount: 300 },
-    { id: "9", description: "Utilities", amount: 300 },
-    { id: "10", description: "Utilities", amount: 300 },
-    { id: "11", description: "Utilities", amount: 300 },
+  useEffect(() => {
+    const getLatestExpenses = async () => {
+      try {
+        const result = await axios.get(
+          `${config.BASE_URL}/api/v1/expense/user/${auth?.user}`
+        );
+        let expenses = [];
+        for (let i = 0; i < 5; i++) {
+          expenses.push(result?.data?.data[i]);
+        }
+        setExpenses(expenses);
+      } catch (error) {
+        console.log(`Error:${error.message}`, error);
+      }
+    };
+    getLatestExpenses();
+  }, [budget, isFocused]);
 
-    // Add more expenses as needed
-  ];
+  useEffect(() => {
+    const getAllGoals = async () => {
+      try {
+        const result = await axios.get(
+          `${config.BASE_URL}/api/v1/goals/${auth?.user}`
+        );
 
-  const goals = [
-    { id: "1", description: "Vacation", targetAmount: 5000 },
-    { id: "2", description: "New Phone", targetAmount: 1000 },
-    { id: "3", description: "Utilities", amount: 300 },
-    { id: "4", description: "Utilities", amount: 300 },
-    { id: "5", description: "Utilities", amount: 300 },
-    { id: "6", description: "Utilities", amount: 300 },
-    { id: "7", description: "Utilities", amount: 300 },
-    { id: "8", description: "Utilities", amount: 300 },
-    { id: "9", description: "Utilities", amount: 300 },
-    { id: "10", description: "Utilities", amount: 300 },
-    { id: "11", description: "Utilities", amount: 300 },
-    // Add more goals as needed
-  ];
+        if (result?.status == 200) {
+          console.log(result?.data?.data);
+          setGoals(result?.data?.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    getAllGoals();
+  }, [budget, isFocused]);
+
+  const handleSingleExpenseModalClose = () => {
+    setSingleExpenseModalVisible(false);
+  };
+
+  const handleSingleExpenseModalView = (data) => {
+    setExpenseModalData(data);
+    setSingleExpenseModalVisible(true);
+  };
 
   return (
     <View style={styles.container}>
       {/* Current Balance Card */}
-      <TouchableOpacity onPress={onLogout}>
-        <Text>Logout</Text>
-      </TouchableOpacity>
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Current Balance</Text>
         <Text style={styles.cardValue}>Rs.{budget.currentBalance}.00</Text>
@@ -214,10 +235,11 @@ const HomeScreen = () => {
         data={expenses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.expenseItem}>
-            <Text>{item.description}</Text>
-            <Text>${item.amount}</Text>
-          </View>
+          <ExpenseCard
+            item={item}
+            key={item?.id}
+            onVisible={handleSingleExpenseModalView}
+          />
         )}
       />
 
@@ -226,12 +248,14 @@ const HomeScreen = () => {
       <FlatList
         data={goals}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.goalItem}>
-            <Text>{item.description}</Text>
-            <Text>${item.targetAmount}</Text>
-          </View>
-        )}
+        renderItem={({ item }) => <SmallGoalCard item={item} key={item?.id} />}
+        style={{ marginBottom: 20 }}
+      />
+
+      <SingleExpenseModal
+        data={expenseModalData}
+        visible={singleExpenseModalVisible}
+        onClose={handleSingleExpenseModalClose}
       />
     </View>
   );

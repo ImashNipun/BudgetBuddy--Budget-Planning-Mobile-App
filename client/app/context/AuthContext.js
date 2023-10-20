@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [isBudgetExsist, setIsBudgetExist] = useState(null);
+  const [isBudgetExpire, setIsBudgetExpire] = useState(null);
   const [isTaskDone, setIsTaskDone] = useState(null);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export const AuthProvider = ({ children }) => {
             authenticated: true,
           });
           checkBugetExist(user);
+          checkBudgetExpire(user);
         }
       } catch (error) {
         console.log(error);
@@ -65,11 +67,47 @@ export const AuthProvider = ({ children }) => {
           setIsBudgetExist(false);
         }
       } else {
-        setIsBudgetExist(false);
+        logout();
       }
     } catch (error) {
       console.log("ERROR", error);
     }
+  }
+
+  async function checkBudgetExpire(user) {
+    try {
+      if (user) {
+        const result = await axios.get(
+          `${config.BASE_URL}/api/v1/budget/${user}`
+        );
+
+        const givenDate = new Date(result?.data?.data?.next_budget_renew_date);
+
+        if (isDateInFuture(givenDate)) {
+          console.log("i am in the date check");
+          setIsBudgetExpire(false);
+        } else {
+          setIsBudgetExpire(true);
+        }
+
+        //console.log(result);
+
+        // if (result?.data?.data != null) {
+        //   setIsBudgetExist(true);
+        // } else {
+        //   setIsBudgetExist(false);
+        // }
+      } else {
+        logout();
+      }
+    } catch (error) {
+      console.log("ERROR", error);
+    }
+  }
+
+  function isDateInFuture(date) {
+    const currentDate = new Date();
+    return date > currentDate;
   }
 
   const login = async (email, password) => {
@@ -94,6 +132,7 @@ export const AuthProvider = ({ children }) => {
       await SecureStore.setItemAsync("TOKEN_KEY", result?.data?.data?.token);
       await SecureStore.setItemAsync("USER_DETAILS", result?.data?.data?._id);
       checkBugetExist(result?.data?.data?._id);
+      checkBudgetExpire(result?.data?.data?._id);
     } catch (error) {
       console.log(`${e.message}:`, error);
     }
@@ -121,7 +160,8 @@ export const AuthProvider = ({ children }) => {
     onLogout: logout,
     isBudgetExsist,
     auth,
-    checkBugetExist
+    checkBugetExist,
+    isBudgetExpire,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
