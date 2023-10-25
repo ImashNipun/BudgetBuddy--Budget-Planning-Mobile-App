@@ -15,12 +15,14 @@ import { config } from "../../config/config";
 import axios from "axios";
 import { useIsFocused } from "@react-navigation/native";
 import useAuth from "../../hooks/useAuth";
+import Loading from "../../components/common/Loading";
 
 const ExpenseScreen = ({ navigation }) => {
   const isFocused = useIsFocused();
   const { auth } = useAuth();
   const [allCategories, setAllCategories] = useState([]);
   const [customCategory, setCustomcategory] = useState(null);
+  const [loadingVisible, setLoadingVisible] = useState(true);
 
   const addExpenseCategory = () => {
     navigation.navigate("AddExpensesWithCategory", {
@@ -39,6 +41,8 @@ const ExpenseScreen = ({ navigation }) => {
         if (result?.data?.data?.custom_category) {
           setCustomcategory(result?.data?.data?.custom_category);
         }
+
+        setLoadingVisible(false);
       } catch (error) {
         console.log(`Error: ${error.message}`, error);
       }
@@ -48,46 +52,70 @@ const ExpenseScreen = ({ navigation }) => {
   }, [isFocused]);
 
   return (
-    <SafeAreaView>
-      <View style={styles.TitleContainer}>
-        <Text style={styles.mainTitleText}>My Expense Categories</Text>
-        <Text style={styles.mainSubTitleText}>
-          Click one category to see your expenses or share some amount with
-          other category
-        </Text>
-        <TouchableOpacity
-          style={styles.mainButton}
-          onPress={addExpenseCategory}
-        >
-          <Text style={styles.mainButtonText}>Add an Expense</Text>
-        </TouchableOpacity>
-      </View>
-      <ScrollView style={styles.ScrollViewContainer}>
-        {allCategories
-          ? allCategories.map((data, index) => {
-              return (
-                <ExpenseCategoryListCard
-                  key={index}
-                  data={data}
-                  navigation={navigation}
-                  custom_cat={false}
-                  allCategories={allCategories}
-                  customCategory={customCategory}
-                />
-              );
-            })
-          : null}
-        {customCategory ? (
-          <ExpenseCategoryListCard
-            data={customCategory}
-            navigation={navigation}
-            custom_cat={true}
-            allCategories={allCategories}
-            customCategory={customCategory}
-          />
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+    <>
+      {loadingVisible && <Loading />}
+      <SafeAreaView>
+        <View style={styles.TitleContainer}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignContent: "center",
+              justifyContent: "space-between",
+              marginBottom: 15,
+              marginTop: 10,
+            }}
+          >
+            <Text style={styles.mainTitleText}>My Expense Categories</Text>
+            <TouchableOpacity
+              style={styles.allExpenseButton}
+              onPress={() => {
+                navigation.navigate("AllExpenses", {
+                  allCategories: allCategories,
+                  customCategory: customCategory,
+                });
+              }}
+            >
+              <Text style={styles.allExpenseButtonText}>View all Expense</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.mainSubTitleText}>
+            Click one category to see your expenses or share some amount with
+            other category
+          </Text>
+          <TouchableOpacity
+            style={styles.mainButton}
+            onPress={addExpenseCategory}
+          >
+            <Text style={styles.mainButtonText}>Add an Expense</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={styles.ScrollViewContainer}>
+          {allCategories
+            ? allCategories.map((data, index) => {
+                return (
+                  <ExpenseCategoryListCard
+                    key={index}
+                    data={data}
+                    navigation={navigation}
+                    custom_cat={false}
+                    allCategories={allCategories}
+                    customCategory={customCategory}
+                  />
+                );
+              })
+            : null}
+          {customCategory ? (
+            <ExpenseCategoryListCard
+              data={customCategory}
+              navigation={navigation}
+              custom_cat={true}
+              allCategories={allCategories}
+              customCategory={customCategory}
+            />
+          ) : null}
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -98,7 +126,6 @@ const styles = StyleSheet.create({
   mainTitleText: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 5,
   },
   mainSubTitleText: {
     fontSize: 16,
@@ -117,6 +144,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 15,
     color: "white",
+  },
+  allExpenseButton: {
+    padding: 10,
+    borderRadius: 5,
+    borderColor: "#8274BC",
+    borderWidth: 1,
+  },
+  allExpenseButtonText: {
+    textAlign: "center",
+    fontSize: 13,
+    color: "#000",
   },
 });
 
