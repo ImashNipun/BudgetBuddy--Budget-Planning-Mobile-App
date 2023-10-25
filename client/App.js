@@ -11,13 +11,15 @@ import BudgetCreateSuccessScreen from "./app/screens/BudgetCreateSuccessScreen";
 import BudgetRenewScreen from "./app/screens/BudgetRenewScreen";
 import { AuthProvider } from "./app/context/AuthContext";
 import useAuth from "./app/hooks/useAuth";
-
+import { StatusBar } from "react-native";
+import CustomLoadingScreen from "./app/components/common/CustomLoadingScreen";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <AuthProvider>
       <NavigationContainer>
+        <StatusBar backgroundColor="#8373C1" />
         <Layout />
       </NavigationContainer>
     </AuthProvider>
@@ -25,45 +27,67 @@ export default function App() {
 }
 
 const Layout = () => {
-  const { auth, isBudgetExsist, isBudgetExpire } = useAuth();
-  const [showSpinner, setShowSpinner] = useState(true);
+  const { auth, isBudgetExsist, isBudgetExpire, isHealthy } = useAuth();
 
   console.log(isBudgetExpire);
 
   return (
     <>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {auth?.authenticated ? (
-          <>
-            {!isBudgetExsist && (
-              <>
-                <Stack.Screen
-                  name="BudgetAddIntro"
-                  component={BudgetAddIntroScreen}
-                />
-                <Stack.Screen
-                  name="BudgetSetup"
-                  component={BudgetSetupScreen}
-                />
-                <Stack.Screen
-                  name="BudgetSetupSuccess"
-                  component={BudgetCreateSuccessScreen}
-                />
-              </>
-            )}
-
-            {isBudgetExpire && (
-              <Stack.Screen name="BudgetRenew" component={BudgetRenewScreen} />
-            )}
-
-            <Stack.Screen name="AppDrawer" component={DrawerNavigation} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-          </>
+        {!isHealthy && (
+          <Stack.Screen name="CustomLoading" component={CustomLoadingScreen} />
         )}
+
+        <>
+          {auth?.authenticated ? (
+            <>
+              {!isBudgetExsist && (
+                <>
+                  <Stack.Screen
+                    name="BudgetAddIntro"
+                    component={BudgetAddIntroScreen}
+                  />
+                  <Stack.Screen
+                    name="BudgetSetup"
+                    component={BudgetSetupScreen}
+                  />
+                  <Stack.Screen
+                    name="BudgetSetupSuccess"
+                    component={BudgetCreateSuccessScreen}
+                  />
+                </>
+              )}
+
+              {isBudgetExpire && (
+                <Stack.Screen
+                  name="BudgetRenew"
+                  component={BudgetRenewScreen}
+                />
+              )}
+
+              <Stack.Screen name="AppDrawer" component={DrawerNavigation} />
+            </>
+          ) : (
+            <>
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+            </>
+          )}
+        </>
+
+        {/* <Stack.Screen name="BudgetAddIntro" component={BudgetAddIntroScreen} />
+          <Stack.Screen name="BudgetSetup" component={BudgetSetupScreen} />
+          <Stack.Screen
+            name="BudgetSetupSuccess"
+            component={BudgetCreateSuccessScreen}
+          />
+
+          <Stack.Screen name="BudgetRenew" component={BudgetRenewScreen} />
+
+          <Stack.Screen name="AppDrawer" component={DrawerNavigation} />
+
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} /> */}
       </Stack.Navigator>
     </>
   );

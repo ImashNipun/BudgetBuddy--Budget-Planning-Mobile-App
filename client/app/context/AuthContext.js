@@ -11,15 +11,22 @@ export const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState({
     user: null,
     token: null,
-    authenticated: null,
+    authenticated: false,
   });
 
-  const [isBudgetExsist, setIsBudgetExist] = useState(null);
-  const [isBudgetExpire, setIsBudgetExpire] = useState(null);
-  const [isTaskDone, setIsTaskDone] = useState(null);
+  const [isBudgetExsist, setIsBudgetExist] = useState(false);
+  const [isBudgetExpire, setIsBudgetExpire] = useState(true);
+  const [mainLoadingVisible, setMainLoadingVisible] = useState(true);
+  const [isHealthy, setIsHealthy] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadToken = async () => {
+      setAuth({
+        user: null,
+        token: null,
+        authenticated: false,
+      });
       try {
         const token = await SecureStore.getItemAsync("TOKEN_KEY");
         const user = await SecureStore.getItemAsync("USER_DETAILS");
@@ -34,7 +41,6 @@ export const AuthProvider = ({ children }) => {
             authenticated: true,
           });
           checkBugetExist(user);
-          checkBudgetExpire(user);
         }
       } catch (error) {
         console.log(error);
@@ -53,55 +59,35 @@ export const AuthProvider = ({ children }) => {
   };
 
   async function checkBugetExist(user) {
+    setMainLoadingVisible(true);
     try {
       if (user) {
         const result = await axios.get(
           `${config.BASE_URL}/api/v1/budget/${user}`
         );
-
-        //console.log(result);
-
-        if (result?.data?.data != null) {
-          setIsBudgetExist(true);
-        } else {
-          setIsBudgetExist(false);
-        }
-      } else {
-        logout();
-      }
-    } catch (error) {
-      console.log("ERROR", error);
-    }
-  }
-
-  async function checkBudgetExpire(user) {
-    try {
-      if (user) {
-        const result = await axios.get(
-          `${config.BASE_URL}/api/v1/budget/${user}`
-        );
-
         const givenDate = new Date(result?.data?.data?.next_budget_renew_date);
+
+        setIsBudgetExist(true);
+        //setIsBudgetExpire(true);
 
         if (isDateInFuture(givenDate)) {
           console.log("i am in the date check");
           setIsBudgetExpire(false);
-        } else {
-          setIsBudgetExpire(true);
         }
 
-        //console.log(result);
-
-        // if (result?.data?.data != null) {
-        //   setIsBudgetExist(true);
-        // } else {
-        //   setIsBudgetExist(false);
-        // }
+        setMainLoadingVisible(false);
       } else {
         logout();
       }
     } catch (error) {
-      console.log("ERROR", error);
+      console.log("ERROR1", error);
+      setIsBudgetExist(false);
+      setIsBudgetExpire(false);
+      setMainLoadingVisible(false);
+      // if (error?.response?.data?.data == null) {
+        
+        
+      // }
     }
   }
 
@@ -119,7 +105,7 @@ export const AuthProvider = ({ children }) => {
 
       //console.log(result?.data?.data);
 
-      setAuth({
+      setAuth({ 
         user: result?.data?.data?._id,
         token: result?.data?.data?.token,
         authenticated: true,
@@ -132,7 +118,6 @@ export const AuthProvider = ({ children }) => {
       await SecureStore.setItemAsync("TOKEN_KEY", result?.data?.data?.token);
       await SecureStore.setItemAsync("USER_DETAILS", result?.data?.data?._id);
       checkBugetExist(result?.data?.data?._id);
-      checkBudgetExpire(result?.data?.data?._id);
     } catch (error) {
       console.log(`${e.message}:`, error);
     }
@@ -162,6 +147,9 @@ export const AuthProvider = ({ children }) => {
     auth,
     checkBugetExist,
     isBudgetExpire,
+    mainLoadingVisible,
+    isHealthy,
+    setIsHealthy,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -8,19 +8,21 @@ import {
 } from "@react-navigation/drawer";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useNavigation, CommonActions } from "@react-navigation/native";
+import axios from "axios";
+import { FontAwesome5 } from "@expo/vector-icons"; // Import icons from FontAwesome5
+import { config } from "../config/config";
+import useAuth from "../hooks/useAuth";
 import HomeScreen from "../screens/common/HomeScreen";
 import BudgetScreen from "../screens/common/BudgetScreen";
 import SavingsScreen from "../screens/common/SavingsScreen";
-import { FontAwesome5 } from "@expo/vector-icons"; // Import icons from FontAwesome5
-import useAuth from "../hooks/useAuth";
 import ExpenseScreen from "../screens/expense/ExpenseScreen";
 import SingleExpenseCategory from "../screens/expense/SingleExpenseCategory";
 import AddExpenseWithCategory from "../screens/expense/AddExpenseWithCategory";
 import AddGoalScreen from "../screens/goals/AddGoalScreen";
 import GoalsScreen from "../screens/goals/GoalsScreen";
 import Chart from "../screens/analytics/Chart";
-import { config } from "../config/config";
-import axios from "axios";
+import DisplayAllExpenses from "../screens/expense/DisplayAllExpenses";
+import NotificationsScreen from "../screens/notification/NotificationMenuPage"
 
 const Drawer = createDrawerNavigator();
 
@@ -45,7 +47,7 @@ const ExpenseScreenStack = () => (
       name="SingleExpenseCategory"
       component={SingleExpenseCategory}
     />
-    {/* Add other screens for the Expense stack as needed */}
+    <ExpenseStack.Screen name="AllExpenses" component={DisplayAllExpenses} />
   </ExpenseStack.Navigator>
 );
 
@@ -148,8 +150,12 @@ const DrawerNavigation = () => {
     <Drawer.Navigator
       initialRouteName="Home"
       screenOptions={{
-        activeBackgroundColor: "red", // Selected drawer background color
-        activeTintColor: "green", // Selected icon and text color
+        headerStyle: {
+          backgroundColor: "#8274BC",
+        },
+        headerTintColor: "#fff",
+        drawerActiveBackgroundColor: "#8274BC", // Selected drawer background color
+        drawerActiveTintColor: "#00FF99", // Selected icon and text color
         inactiveTintColor: "green", // Inactive icon and text color
         headerShown: true,
       }}
@@ -211,7 +217,7 @@ const DrawerNavigation = () => {
       />
       <Drawer.Screen
         name="Notifications"
-        component={Chart}
+        component={NotificationsScreen}
         options={{
           drawerIcon: ({ color }) => (
             <FontAwesome5 name="bell" size={24} color={color} />

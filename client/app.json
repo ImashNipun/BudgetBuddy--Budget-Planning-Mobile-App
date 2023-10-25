@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "uee_project",
-    "slug": "uee_project",
+    "name": "Budget Buddy",
+    "slug": "Plan your budget and track your expenses",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/app_logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash-screen2.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#8274BC"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
