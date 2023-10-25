@@ -15,6 +15,7 @@ import axios from "axios";
 import { config } from "../../config/config";
 import GoalCardDetailed from "../../components/goal/GoalCardDetailed";
 import useAuth from "../../hooks/useAuth";
+import Loading from "../../components/common/Loading";
 
 const color = ['#F0941F','#019587','#FF4858']
 
@@ -22,6 +23,8 @@ const GoalsScreen = ({ navigation }) => {
   const { auth } = useAuth();
   const isFocused = useIsFocused();
   const [goals, setGoals] = useState([]);
+  const [loadingVisible, setLoadingVisible] = useState(true);
+
   const addExpenseCategory = () => {
     if (goals.length >= 3) {
       Alert.alert(
@@ -41,6 +44,8 @@ const GoalsScreen = ({ navigation }) => {
           `${config.BASE_URL}/api/v1/goals/${auth?.user}`
         );
 
+        setLoadingVisible(false);
+
         if (result?.status == 200) {
           console.log(result?.data?.data);
           setGoals(result?.data?.data);
@@ -54,6 +59,8 @@ const GoalsScreen = ({ navigation }) => {
   }, [isFocused]);
 
   return (
+    <>
+    {loadingVisible && <Loading />}
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.TitleContainer}>
         <Text style={styles.mainTitleText}>Goal List</Text>
@@ -81,6 +88,7 @@ const GoalsScreen = ({ navigation }) => {
         )}
       </ScrollView>
     </SafeAreaView>
+    </>
   );
 };
 

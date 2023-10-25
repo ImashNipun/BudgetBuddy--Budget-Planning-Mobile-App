@@ -91,9 +91,9 @@ const GoalCardDetailed = ({ goal, navigation, color }) => {
         <View style={styles.progressBar}>
           <Progress.Bar
             progress={completed_persentage}
-            width={300}
-            height={8}
-            color="green"
+            width={null}
+            height={10}
+            color="#00FF99"
           />
         </View>
       </View>
