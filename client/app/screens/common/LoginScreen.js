@@ -8,8 +8,9 @@ import {
   TouchableOpacity,
   StatusBar,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from "react-native";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "../../../assets/app_logo.png";
 import { Formik } from "formik";
 import * as Yup from "yup";
@@ -19,11 +20,7 @@ import { useIsFocused } from "@react-navigation/native";
 const LoginScreen = ({ navigation }) => {
   const { auth, onLogin, isBudgetExsist } = useAuth();
   const isFocued = useIsFocused();
-
-  useEffect(() => {
-    
-    console.log("login screen change");
-  }, [isFocued,isBudgetExsist]);
+  const [loadingButtonVisible, setLoadingButtonVisible] = useState(false);
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }}>
@@ -31,7 +28,9 @@ const LoginScreen = ({ navigation }) => {
         initialValues={{ email: "", password: "" }}
         validationSchema={validationSchema}
         onSubmit={async (values) => {
+          setLoadingButtonVisible(true);
           await onLogin(values.email, values.password);
+          setLoadingButtonVisible(false);
         }}
       >
         {({
@@ -43,7 +42,7 @@ const LoginScreen = ({ navigation }) => {
           touched,
         }) => (
           <View style={styles.container}>
-            <StatusBar backgroundColor="#8373C1" />
+            <StatusBar backgroundColor="#fff" barStyle="dark-content"/>
             {/* Logo */}
             <Image source={logo} style={styles.logo} />
 
@@ -84,12 +83,18 @@ const LoginScreen = ({ navigation }) => {
                   <Text style={{ color: "red" }}>{errors.password}</Text>
                 )}
               </View>
-              <TouchableOpacity
-                style={styles.loginButton}
-                onPress={handleSubmit}
-              >
-                <Text style={styles.loginButtonText}>Login</Text>
-              </TouchableOpacity>
+              {loadingButtonVisible ? (
+                <TouchableOpacity style={styles.loginButton}>
+                  <ActivityIndicator size="large" color="#fff" />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.loginButton}
+                  onPress={handleSubmit}
+                >
+                  <Text style={styles.loginButtonText}>Login</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Sign-up Navigation Line */}

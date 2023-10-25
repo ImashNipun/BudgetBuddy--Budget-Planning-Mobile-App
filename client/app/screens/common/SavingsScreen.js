@@ -5,188 +5,70 @@ import { useIsFocused } from "@react-navigation/native";
 import { config } from "../../config/config";
 import axios from "axios";
 import useAuth from "../../hooks/useAuth";
+import Loading from "../../components/common/Loading";
+import SavingsListCard from "../../components/budget/SavingsListCard";
 
 const SavingsScreen = () => {
   const isFocused = useIsFocused();
-  const { auth, onLogout } = useAuth();
-
-  const [budget, setBudget] = useState({
-    currentBalance: null,
-    totalBudget: null,
-    totalExpenses: null,
-  });
-
-  useEffect(() => {
-    console.log("this is budget screen");
-  }, [isFocused]);
-  // Sample data for budgets, expenses, and goals
-  // const budgets = {
-  //   currentBalance: 150000,
-  //   totalBudget: 150000,
-  //   totalExpenses: 150000,
-  // };
-
-  const expenses = [
-    { id: "1", description: "Groceries", amount: 200 },
-    { id: "2", description: "Utilities", amount: 300 },
-    { id: "3", description: "Utilities", amount: 300 },
-    { id: "4", description: "Utilities", amount: 300 },
-    { id: "5", description: "Utilities", amount: 300 },
-    { id: "6", description: "Utilities", amount: 300 },
-    { id: "7", description: "Utilities", amount: 300 },
-    { id: "8", description: "Utilities", amount: 300 },
-    { id: "9", description: "Utilities", amount: 300 },
-    { id: "10", description: "Utilities", amount: 300 },
-    { id: "11", description: "Utilities", amount: 300 },
-
-    // Add more expenses as needed
-  ];
-
-  const goals = [
-    { id: "1", description: "Vacation", targetAmount: 5000 },
-    { id: "2", description: "New Phone", targetAmount: 1000 },
-    { id: "3", description: "Utilities", amount: 300 },
-    { id: "4", description: "Utilities", amount: 300 },
-    { id: "5", description: "Utilities", amount: 300 },
-    { id: "6", description: "Utilities", amount: 300 },
-    { id: "7", description: "Utilities", amount: 300 },
-    { id: "8", description: "Utilities", amount: 300 },
-    { id: "9", description: "Utilities", amount: 300 },
-    { id: "10", description: "Utilities", amount: 300 },
-    { id: "11", description: "Utilities", amount: 300 },
-    // Add more goals as needed
-  ];
+  const { auth } = useAuth();
+  const [savings, setSavings] = useState([]);
+  const [loadingVisible, setLoadingVisible] = useState(true);
+  const [totalSavings, setTotalSavings] = useState(0);
 
   useEffect(() => {
     const getBudgetDetails = async () => {
       try {
         const result = await axios.get(
-          `${config.BASE_URL}/api/v1/budget/${auth?.user}`
+          `${config.BASE_URL}/api/v1/budget/all-savings/${auth?.user}`
         );
 
-        const result_data = result?.data?.data;
+        setSavings(result?.data?.data);
+        calculateTotalSavings(result?.data?.data);
 
-        if (result_data?.savings) {
-          setBudget((prev) => ({
-            ...prev,
-            totalBudget: result_data?.budget_amount,
-            totalExpenses: calculateTotalExpenses({
-              selected_categories: result_data?.selected_categories,
-              total_budget: result_data?.budget_amount,
-              isSaving: true,
-              savings_amount: result_data?.savings?.savings_amount,
-            }),
-            currentBalance:
-              result_data?.budget_amount -
-              result_data?.savings?.savings_amount -
-              calculateTotalExpenses({
-                selected_categories: result_data?.selected_categories,
-                total_budget: result_data?.budget_amount,
-                isSaving: true,
-                savings_amount: result_data?.savings?.savings_amount,
-              }),
-          }));
-        } else if (result_data?.custom_category) {
-          console.log(result_data);
-          setBudget((prev) => ({
-            ...prev,
-            totalBudget: result_data?.budget_amount,
-            totalExpenses: calculateTotalExpenses({
-              selected_categories: result_data?.selected_categories,
-              total_budget: result_data?.budget_amount,
-              isCCategory: true,
-              c_category_amount: result_data?.custom_category?.remaining_amount,
-            }),
-            currentBalance:
-              result_data?.budget_amount -
-              calculateTotalExpenses({
-                selected_categories: result_data?.selected_categories,
-                total_budget: result_data?.budget_amount,
-                isCCategory: true,
-                c_category_amount:
-                  result_data?.custom_category?.remaining_amount,
-              }),
-          }));
-        } else {
-          setBudget((prev) => ({
-            ...prev,
-            totalBudget: result_data?.budget_amount,
-            totalExpenses: calculateTotalExpenses({
-              selected_categories: result_data?.selected_categories,
-              total_budget: result_data?.budget_amount,
-            }),
-            currentBalance:
-              result_data?.budget_amount -
-              calculateTotalExpenses({
-                selected_categories: result_data?.selected_categories,
-                total_budget: result_data?.budget_amount,
-              }),
-          }));
-        }
+        setLoadingVisible(false);
       } catch (error) {
-        console.log(`Error:${error.message}`, error);
+        console.log(error);
       }
     };
 
-    if (auth?.user) {
-      getBudgetDetails();
-    } else {
-    }
+    getBudgetDetails();
   }, [isFocused]);
 
-  const calculateTotalExpenses = ({
-    selected_categories,
-    total_budget,
-    isCCategory = false,
-    c_category_amount,
-    isSaving = false,
-    savings_amount,
-  }) => {
-    let total_expense = 0;
+  const calculateTotalSavings = (data) => {
+    let total_savings = 0;
 
-    if (isCCategory) {
-      for (const cat of selected_categories) {
-        total_expense += cat.remaining_amount;
-      }
-      return total_budget - (total_expense + c_category_amount);
-    } else if (isSaving) {
-      for (const cat of selected_categories) {
-        total_expense += cat.remaining_amount;
-      }
-      return total_budget - savings_amount - total_expense;
-    } else {
-      for (const cat of selected_categories) {
-        total_expense += cat.remaining_amount;
-      }
-      return total_budget - total_expense;
-    }
+    data?.forEach((item) => {
+      total_savings += item?.savings_amount;
+    });
+
+    setTotalSavings(total_savings);
   };
 
   return (
-    <View style={styles.container}>
-      {/* Current Balance Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Latest Savings Amount</Text>
-        <Text style={styles.cardValue1}>Rs.{budget.currentBalance}.00</Text>
-      </View>
+    <>
+      {loadingVisible && <Loading />}
+      <View style={styles.container}>
+        {/* Current Balance Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Latest Savings Amount</Text>
+          <Text style={styles.cardValue1}>Rs.{totalSavings.toFixed(2)}</Text>
+        </View>
 
-      {/* Expenses List */}
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Text style={styles.sectionTitle}>Savings Updates</Text>
-      </View>
-      <FlatList
-        data={expenses}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.expenseItem}>
-            <Text>{item.description}</Text>
-            <Text>${item.amount}</Text>
-          </View>
+        {/* Expenses List */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={styles.sectionTitle}>Savings List</Text>
+        </View>
+        {savings.length > 0 ? (
+          <FlatList
+            data={savings}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => <SavingsListCard data={item} />}
+          />
+        ) : (
+          <Text>No savings are available</Text>
         )}
-      />
-
-      {/* Goals List */}
-    </View>
+      </View>
+    </>
   );
 };
 

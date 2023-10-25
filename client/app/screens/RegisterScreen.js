@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  ActivityIndicator
 } from "react-native";
 import React, { useState } from "react";
 import logo from "../../assets/app_logo.png";
@@ -16,90 +17,26 @@ import * as Yup from "yup";
 import useAuth from "../hooks/useAuth";
 
 const RegisterScreen = ({ navigation }) => {
-  //const [verifySend, setVerifySend] = useState(false);
   const { onRegister } = useAuth();
+  const [loadingButtonVisible, setLoadingButtonVisible] = useState(false);
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#8373C1" />
-      {/* verifySend ? (
-        <Formik
-          initialValues={{ v_code: "" }}
-          validationSchema={verifyCodeValidationSchema}
-          onSubmit={(values) => {
-            // Handle form submission here
-            //navigation.navigate("BudgetAddIntro")
-            console.log(values);
-          }}
-        >
-          {({
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            values,
-            errors,
-            touched,
-          }) => (
-            <>
-              
-              <Image source={logo} style={styles.logo} />
-
-              
-              <View style={styles.headerContainer}>
-                <Text style={styles.title}>Email Verification</Text>
-                <Text style={styles.welcomeMessage}>
-                  Please enter the verification code sent to your email.
-                </Text>
-              </View>
-
-              
-              <View style={styles.formContainer}>
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Verification Code"
-                    onChangeText={handleChange("v_code")}
-                    onBlur={handleBlur("v_code")}
-                    value={values.v_code}
-                  />
-                  {touched.v_code && errors.v_code && (
-                    <Text style={{ color: "red" }}>
-                      {errors.v_code}
-                    </Text>
-                  )}
-                </View>
-
-                <>
-                  <Text style={styles.resendLink}>
-                    Resend Verification Code
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.registerButton}
-                    onPress={handleSubmit}
-                  >
-                    <Text style={styles.registerButtonText}>Verify</Text>
-                  </TouchableOpacity>
-                </>
-              </View>
-            </>
-          
-        </Formik> */}
-
+      <StatusBar backgroundColor="#fff" barStyle="dark-content"/>
       <Formik
         initialValues={{ user_name: "", email: "", password: "" }}
         validationSchema={registerValidationSchema}
         onSubmit={async (values, { resetForm }) => {
           const { user_name, email, password } = values;
           try {
+            setLoadingButtonVisible(true);
             const result = await onRegister(user_name, email, password);
-            console.log(result.status);
+            setLoadingButtonVisible(false)
             if (result?.status == 201) {
               Alert.alert(
                 "Registered Successfully",
                 "Your account has create successfuly! Press ok to login.",
-                [
-                  { text: "OK", onPress: () => navigation.navigate("Login") },
-                ]
+                [{ text: "OK", onPress: () => navigation.navigate("Login") }]
               );
             }
           } catch (error) {
@@ -181,12 +118,21 @@ const RegisterScreen = ({ navigation }) => {
                   <Text style={{ color: "red" }}>{errors.password}</Text>
                 )}
               </View>
-              <TouchableOpacity
-                style={styles.registerButton}
-                onPress={handleSubmit}
-              >
-                <Text style={styles.registerButtonText}>Register</Text>
-              </TouchableOpacity>
+              {loadingButtonVisible ? (
+                <TouchableOpacity
+                  style={styles.registerButton}
+                  
+                >
+                  <ActivityIndicator size="large" color="#fff" />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.registerButton}
+                  onPress={handleSubmit}
+                >
+                  <Text style={styles.registerButtonText}>Register</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Login Navigation Line */}

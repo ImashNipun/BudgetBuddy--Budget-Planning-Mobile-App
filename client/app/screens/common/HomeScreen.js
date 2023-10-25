@@ -17,10 +17,11 @@ import axios from "axios";
 import ExpenseCard from "../../components/expense/ExpenseCard";
 import SmallGoalCard from "../../components/goal/SmallGoalCard";
 import SingleExpenseModal from "../../components/expense/SingleExpenseModal";
+import Loading from "../../components/common/Loading";
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   const isFocused = useIsFocused();
-  const { auth, onLogout } = useAuth();
+  const { auth } = useAuth();
 
   const [budget, setBudget] = useState({
     currentBalance: null,
@@ -33,11 +34,13 @@ const HomeScreen = () => {
     useState(false);
   const [expenseModalData, setExpenseModalData] = useState(null);
   const [goals, setGoals] = useState(null);
+  const [loadingVisible, setLoadingVisible] = useState(true);
+
   useEffect(() => {
     async function getdata() {
       try {
         const user = await SecureStore.getItemAsync("USER_DETAILS");
-        console.log(user);
+        //console.log(user);
       } catch (error) {
         console.log("ERROR", error);
       }
@@ -45,7 +48,7 @@ const HomeScreen = () => {
 
     getdata();
 
-    console.log(auth ? auth : { message: "no auth" });
+    //console.log(auth ? auth : { message: "no auth" });
   }, [auth, isFocused]);
 
   useEffect(() => {
@@ -56,6 +59,8 @@ const HomeScreen = () => {
         );
 
         const result_data = result?.data?.data;
+
+        setLoadingVisible(false);
 
         if (result_data?.savings) {
           setBudget((prev) => ({
@@ -78,7 +83,7 @@ const HomeScreen = () => {
               }),
           }));
         } else if (result_data?.custom_category) {
-          console.log(result_data);
+          //console.log(result_data);
           setBudget((prev) => ({
             ...prev,
             totalBudget: result_data?.budget_amount,
@@ -159,11 +164,14 @@ const HomeScreen = () => {
         const result = await axios.get(
           `${config.BASE_URL}/api/v1/expense/user/${auth?.user}`
         );
-        let expenses = [];
-        for (let i = 0; i < 5; i++) {
-          expenses.push(result?.data?.data[i]);
+
+        let expense = result?.data?.data;
+        if (result?.data?.data.length != 0 && result?.data?.data.length > 5) {
+          for (let i = 0; i < 5; i++) {
+            expenses.push(result?.data?.data[i]);
+          }
         }
-        setExpenses(expenses);
+        setExpenses(expense);
       } catch (error) {
         console.log(`Error:${error.message}`, error);
       }
@@ -179,7 +187,7 @@ const HomeScreen = () => {
         );
 
         if (result?.status == 200) {
-          console.log(result?.data?.data);
+          //console.log(result?.data?.data);
           setGoals(result?.data?.data);
         }
       } catch (error) {
@@ -200,64 +208,133 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Current Balance Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Current Balance</Text>
-        <Text style={styles.cardValue}>Rs.{budget.currentBalance}.00</Text>
+    <>
+      {loadingVisible && <Loading />}
+      <View style={styles.container}>
+        {/* Current Balance Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Current Balance</Text>
+          <Text style={styles.cardValue}>Rs.{budget.currentBalance}.00</Text>
 
-        {/* Total Budget and Total Expenses Cards */}
-        <View style={styles.cardRow}>
-          <View style={styles.innerCard}>
-            <Image source={upimg} style={styles.cardicon} />
-            <View>
-              <Text style={styles.cardTitleInner}>Total Income</Text>
-              <Text style={styles.cardValueInner}>
-                Rs.{budget.totalBudget}.00
-              </Text>
+          {/* Total Budget and Total Expenses Cards */}
+          <View style={styles.cardRow}>
+            <View style={styles.innerCard}>
+              <Image source={upimg} style={styles.cardicon} />
+              <View>
+                <Text style={styles.cardTitleInner}>Total Income</Text>
+                <Text style={styles.cardValueInner}>
+                  Rs.{budget.totalBudget}.00
+                </Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.innerCard}>
-            <Image source={downimg} style={styles.cardicon} />
-            <View>
-              <Text style={styles.cardTitleInner}>Total Expenses</Text>
-              <Text style={styles.cardValueInner}>
-                Rs.{budget.totalExpenses}.00
-              </Text>
+            <View style={styles.innerCard}>
+              <Image source={downimg} style={styles.cardicon} />
+              <View>
+                <Text style={styles.cardTitleInner}>Total Expenses</Text>
+                <Text style={styles.cardValueInner}>
+                  Rs.{budget.totalExpenses}.00
+                </Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      {/* Expenses List */}
-      <Text style={styles.sectionTitle}>My Expenses</Text>
-      <FlatList
-        data={expenses}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ExpenseCard
-            item={item}
-            key={item?.id}
-            onVisible={handleSingleExpenseModalView}
+        {/* Expenses List */}
+        <View
+          style={{
+            flexDirection: "row",
+            marginTop: 16,
+            marginBottom: 16,
+            justifyContent: "space-between",
+          }}
+        >
+          <Text style={styles.sectionTitle}>My Expenses</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              padding: 5,
+              paddingLeft: 12,
+              paddingRight: 12,
+              borderColor: "#8274BC",
+              borderWidth: 1,
+              borderRadius: 5,
+              borderStyle: "dashed",
+            }}
+            onPress={() => {
+              
+            }}
+          >
+            All expenses
+          </Text>
+        </View>
+
+        {expenses?.length != 0 ? (
+          <FlatList
+            data={expenses}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <ExpenseCard
+                item={item}
+                key={item?.id}
+                onVisible={handleSingleExpenseModalView}
+              />
+            )}
+            style={{ flex: 1 }}
           />
+        ) : (
+          <Text style={{ marginBottom: "auto" }}>
+            No expenses are available
+          </Text>
         )}
-      />
 
-      {/* Goals List */}
-      <Text style={styles.sectionTitle}>Goals</Text>
-      <FlatList
-        data={goals}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <SmallGoalCard item={item} key={item?.id} />}
-        style={{ marginBottom: 20 }}
-      />
+        {/* Goals List */}
+        <View
+          style={{
+            flexDirection: "row",
+            marginTop: 16,
+            marginBottom: 16,
+            justifyContent: "space-between",
+          }}
+        >
+          <Text style={styles.sectionTitle}>Goals</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              padding: 5,
+              paddingLeft: 12,
+              paddingRight: 12,
+              borderColor: "#8274BC",
+              borderWidth: 1,
+              borderRadius: 5,
+              borderStyle: "dashed",
+            }}
+            onPress={() => {
+              navigation.navigate("Goals", { screen: "AllGoals" });
+            }}
+          >
+            All goals
+          </Text>
+        </View>
+        {goals?.length != 0 ? (
+          <FlatList
+            data={goals}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <SmallGoalCard item={item} key={item?.id} />
+            )}
+            style={{ flex: 1 }}
+          />
+        ) : (
+          <Text style={{ marginBottom: "auto" }}>No goals are available</Text>
+        )}
+      </View>
 
       <SingleExpenseModal
         data={expenseModalData}
         visible={singleExpenseModalVisible}
         onClose={handleSingleExpenseModalClose}
       />
-    </View>
+    </>
   );
 };
 
@@ -318,8 +395,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    marginTop: 16,
-    marginBottom: 16,
   },
   expenseItem: {
     flexDirection: "row",
