@@ -1,60 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { RadioButton } from "react-native-paper";
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  ProgressChart,
-  ContributionGraph,
-  StackedBarChart,
-} from "react-native-chart-kit";
+import axios from "axios";
+import { LineChart, BarChart } from "react-native-chart-kit";
+import { Text, StyleSheet, ScrollView, View, Dimensions } from "react-native";
+import useAuth from "../../hooks/useAuth";
+import { config } from "../../config/config";
+import Loading from "../../components/common/Loading";
+import { useIsFocused } from "@react-navigation/native";
 
-import {
-  Text,
-  TextInput,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Button,
-  View,
-  Dimensions,
-} from "react-native";
-
-const Chart = ({ navigation }) => {
-  const screenWidth = Dimensions.get("window").width;
-  const [selectedCategory, setSelectedCategory] = useState("food"); // Initialize the selected category state
-  const [selectedChartType, setSelectedChartType] = useState("bar"); // Initialize the selected chart type
-  const data = {
-    labels: ["M1", "M2", "M3", "M4", "M5", "M6", "M7"],
-    datasets: [
-      {
-        data: [200, 450, 280, 320, 700, 400, 1000], // Data for the first dataset
-        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
-      },
-      {
-        data: [30, 60, 25, 48], // Data for the second dataset
-        color: (opacity = 1) => `rgba(42, 187, 155, ${opacity})`,
-      },
-      {
-        data: [10, 20, 30, 40], // Data for the third dataset
-        color: (opacity = 1) => `rgba(69, 166, 248, ${opacity})`,
-      },
-    ],
-  };
-
-  // Expense data for each category and month
-  const expenseData = {
-    food: [100, 150, 120, 180, 220, 190, 160, 140, 200, 220, 250, 280],
-    housing: [800, 820, 800, 850, 880, 900, 920, 900, 950, 970, 1000, 1050],
-    utilities: [100, 110, 105, 115, 120, 130, 125, 140, 135, 130, 125, 120],
-    healthcare: [50, 60, 55, 70, 80, 70, 65, 75, 80, 85, 90, 100],
-    personal: [200, 220, 210, 230, 240, 250, 260, 270, 280, 290, 300, 320],
-  };
-
-  // Data for the line chart
-  const lineChartData = {
+const Chart = () => {
+  const isFocused = useIsFocused();
+  const { auth } = useAuth();
+  const [fullData, setFullData] = useState([]);
+  const [budget, setBudget] = useState([]);
+  const [allexpesnse, setAllexpesnse] = useState([]);
+  const [food, setFood] = useState([]);
+  const [transport, setTransport] = useState([]);
+  const [housing, setHousing] = useState([]);
+  const [utilities, setUtilities] = useState([]);
+  const [healthcare, setHealthcare] = useState([]);
+  const [personal, setPersonal] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("food");
+  const [selectedChartType, setSelectedChartType] = useState("bar");
+  const [loadingVisible, setLoadingVisible] = useState(true);
+  const [data, setData] = useState({
     labels: [
       "Jan",
       "Feb",
@@ -71,165 +41,411 @@ const Chart = ({ navigation }) => {
     ],
     datasets: [
       {
-        data: expenseData[selectedCategory],
-        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
+        data: [],
+        color: (opacity = 0) => `rgba(255, 255, 255, ${opacity})`,
+      },
+    ],
+  });
+  const [newdata, setNewdata] = useState({
+    labels: [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ],
+    datasets: [
+      {
+        data: [],
+        color: (opacity = 0) => `rgba(255, 255, 255, ${opacity})`,
+      },
+    ],
+  });
+  const [lineChartData, setLineChartData] = useState({
+    labels: [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ],
+    datasets: [
+      {
+        data: [],
+        color: (opacity = 0) => `rgba(255, 255, 255, ${opacity})`,
         strokeWidth: 2,
       },
     ],
-  };
+  });
+
+  useEffect(() => {
+    const data = {
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      datasets: [
+        {
+          data: budget ? budget : [],
+          color: (opacity = 0) => `rgba(255, 255, 255, ${opacity})`,
+        },
+      ],
+    };
+    setData(data);
+  }, [budget, isFocused]);
+
+  useEffect(() => {
+    const newdata = {
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      datasets: [
+        {
+          data: allexpesnse ? allexpesnse : [],
+          color: (opacity = 0) => `rgba(255, 255, 255, ${opacity})`,
+        },
+      ],
+    };
+    setNewdata(newdata);
+  }, [allexpesnse, isFocused]);
+
+  useEffect(() => {
+    const expenseData = {
+      food: food ? food : [],
+      housing: housing ? housing : [],
+      utilities: utilities ? utilities : [],
+      healthcare: healthcare ? healthcare : [],
+      personal: personal ? personal : [],
+      transport: transport ? transport : [],
+    };
+
+    const lineChartData = {
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      datasets: [
+        {
+          data: expenseData[selectedCategory ? selectedCategory : "food"],
+          color: (opacity = 0) => `rgba(255, 255, 255, ${opacity})`,
+          strokeWidth: 2,
+        },
+      ],
+    };
+    setLineChartData(lineChartData);
+  }, [
+    selectedCategory,
+    isFocused,
+    food,
+    housing,
+    utilities,
+    healthcare,
+    personal,
+    transport,
+  ]);
 
   const chartConfig = {
-    backgroundGradientFrom: "white",
-    backgroundGradientTo: "#f2f2f2",
+    backgroundGradientFrom: "#8274BC",
+    backgroundGradientTo: "#8274BC",
     decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    color: (opacity = 0) => `rgba(255, 255, 255, ${opacity})`,
     style: {
       borderRadius: 16,
     },
     propsForLabels: {
       fontSize: 12,
     },
-    barRadius: 2, // This will round the corners of the bars
-    barWidth: 10,
+    barRadius: 2,
+    barPercentage: 0.5,
+    propsForDots: {
+      r: "6",
+      strokeWidth: "1",
+      stroke: "#fff",
+    },
   };
 
+  const getE = async () => {
+    try {
+      const res = await axios.get(
+        `${config.BASE_URL}/api/v1/expense/user/${auth?.user}`
+      );
+      setFullData(res?.data?.data);
+      const fullData = res?.data?.data;
+
+      const expenseData = Array.from({ length: 12 }, (_, index) => ({
+        key: index + 1,
+        foodValue: 0,
+        transportValue: 0,
+        housingValue: 0,
+        healthcareValue: 0,
+        utilitiesValue: 0,
+        personalValue: 0,
+        fullValue: 0,
+      }));
+
+      for (let x = 0; x < fullData.length; x++) {
+        const date = new Date(fullData[x].expense_date);
+        const month = date.getMonth() + 1;
+
+        if (month >= 1 && month <= 12) {
+          switch (fullData[x].expense_category.category_name) {
+            case "Food":
+              expenseData[month - 1].foodValue += parseInt(
+                fullData[x].expense_amount
+              );
+              break;
+            case "Transportation":
+              expenseData[month - 1].transportValue += parseInt(
+                fullData[x].expense_amount
+              );
+              break;
+            case "Housing":
+              expenseData[month - 1].housingValue += parseInt(
+                fullData[x].expense_amount
+              );
+              break;
+            case "Healthcare":
+              expenseData[month - 1].healthcareValue += parseInt(
+                fullData[x].expense_amount
+              );
+              break;
+            case "Utilities":
+              expenseData[month - 1].utilitiesValue += parseInt(
+                fullData[x].expense_amount
+              );
+              break;
+            case "Personal":
+              expenseData[month - 1].personalValue += parseInt(
+                fullData[x].expense_amount
+              );
+              break;
+            default:
+              break;
+          }
+          if (month >= 1 && month <= 12) {
+            expenseData[month - 1].fullValue += parseInt(
+              fullData[x].expense_amount
+            );
+          }
+        }
+      }
+
+      setFood(expenseData.map((item) => item.foodValue));
+      setTransport(expenseData.map((item) => item.transportValue));
+      setHousing(expenseData.map((item) => item.housingValue));
+      setHealthcare(expenseData.map((item) => item.healthcareValue));
+      setUtilities(expenseData.map((item) => item.utilitiesValue));
+      setPersonal(expenseData.map((item) => item.personalValue));
+      setAllexpesnse(expenseData.map((item) => item.fullValue));
+      setLoadingVisible(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getB = async () => {
+    try {
+      const res = await axios.get(
+        `${config.BASE_URL}/api/v1/budget/all-budgets/${auth?.user}`
+      );
+      const fullData = res.data.data;
+      const budgetData = Array.from({ length: 12 }, (_, index) => ({
+        key: index + 1,
+        budgetValue: 0,
+      }));
+
+      for (let x = 0; x < fullData.length; x++) {
+        const date = new Date(fullData[x].createdAt);
+        const month = date.getMonth() + 1;
+
+        if (month >= 1 && month <= 12) {
+          budgetData[month - 1].budgetValue += parseInt(
+            fullData[x].budget_amount
+          );
+        }
+      }
+
+      setBudget(budgetData.map((item) => item.budgetValue));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getE();
+    getB();
+  }, []);
+
   return (
-    <ScrollView style={styles.view}>
-      <Text style={styles.topic}>Total Budget</Text>
+    <>
+      {loadingVisible && <Loading />}
+      <ScrollView style={{ backgroundColor: "white" }}>
+        <View style={styles.view}>
+          <View style={{ marginBottom: 20, marginTop: 10 }}>
+            <Text style={styles.topic}>Total Budget Vs Total Expenses</Text>
+            <Text style={{ marginBottom: 10, textAlign: "justify" }}>
+              Use bellow radio buttons to switch between total budget chart and
+              total expense chart
+            </Text>
+            <View style={styles.container}>
+              {selectedChartType === "bar"
+                ? data && (
+                    <BarChart
+                      data={data}
+                      width={(Dimensions.get("window").width * 92) / 100}
+                      height={200}
+                      chartConfig={chartConfig}
+                      style={styles.chart}
+                    />
+                  )
+                : newdata && (
+                    <BarChart
+                      data={newdata}
+                      width={(Dimensions.get("window").width * 92) / 100}
+                      height={200}
+                      chartConfig={chartConfig}
+                      style={styles.chart}
+                    />
+                  )}
 
-      {/* <View style={styles.container}>
-        <BarChart
-          data={data}
-          width={300}
-          height={200}
-          chartConfig={chartConfig}
-          style={styles.chart}
-        />
-      </View> */}
+              {selectedChartType === "bar"
+                ? !data && <Text>No data to display</Text>
+                : !newdata && <Text>No data to display</Text>}
+            </View>
 
-      <View style={styles.container}>
-        {/* Conditionally render Bar Chart or Line Chart based on selectedChartType */}
-        {selectedChartType === "bar" ? (
-          <BarChart
-            data={data}
-            width={400}
-            height={200}
-            yAxisLabel="Rs."
-            chartConfig={chartConfig}
-            style={styles.chart}
-          />
-        ) : (
-          <LineChart
-            data={lineChartData}
-            width={400}
-            height={200}
-            yAxisLabel="Rs."
-            chartConfig={chartConfig}
-            style={styles.chart}
-          />
-        )}
-      </View>
-
-      <View style={styles.container}>
-        {/* Radio buttons to toggle chart type */}
-        <RadioButton.Group
-          onValueChange={(value) => setSelectedChartType(value)}
-          value={selectedChartType}
-        >
-          <View style={styles.radioContainer}>
-            <RadioButton value="bar" />
-            <RadioButton value="line" />
+            <View style={styles.container}>
+              <RadioButton.Group
+                onValueChange={(value) => setSelectedChartType(value)}
+                value={selectedChartType}
+              >
+                <View style={styles.radioContainer}>
+                  <RadioButton value="bar" />
+                  <RadioButton value="line" />
+                </View>
+              </RadioButton.Group>
+            </View>
           </View>
-          {/* <View style={styles.radioContainer}>
-          </View> */}
-        </RadioButton.Group>
-      </View>
 
-      <Text style={styles.topic}>Category</Text>
+          <View
+          // style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <Text style={styles.topic}>Category</Text>
+            <Text style={{ marginBottom: 10, textAlign: "justify" }}>
+              Use bellow picker to switch between categories
+            </Text>
+            <View
+              style={{ borderWidth: 1, borderColor: "black", borderRadius: 5 }}
+            >
+              <Picker
+                selectedValue={selectedCategory}
+                onValueChange={(itemValue, itemIndex) =>
+                  setSelectedCategory(itemValue)
+                }
+                height={10}
+                style={{
+                  color: "black",
+                  borderRadius: 5,
+                }}
+              >
+                <Picker.Item label="Food" value="food" />
+                <Picker.Item label="Housing" value="housing" />
+                <Picker.Item label="Utilities" value="utilities" />
+                <Picker.Item label="Healthcare" value="healthcare" />
+                <Picker.Item label="Personal" value="personal" />
+                <Picker.Item label="Transportation" value="transport" />
+              </Picker>
+            </View>
+          </View>
 
-      <Picker
-        selectedValue={selectedCategory}
-        onValueChange={(itemValue, itemIndex) => setSelectedCategory(itemValue)}
-        style={{ color: "black" }} // Change the text color here
-      >
-        <Picker.Item label="Food" value="food" />
-        <Picker.Item label="Housing" value="housing" />
-        <Picker.Item label="Utilities" value="utilities" />
-        <Picker.Item label="Healthcare" value="healthcare" />
-        <Picker.Item label="Personal" value="personal" />
-      </Picker>
-
-      <View style={styles.container}>
-        <LineChart
-          data={lineChartData}
-          width={400}
-          height={200}
-          yAxisLabel="Rs."
-          chartConfig={chartConfig}
-          style={styles.chart}
-        />
-      </View>
-    </ScrollView>
+          <View style={styles.container}>
+            {lineChartData.datasets[0].data.length != 0 ? (
+              <LineChart
+                data={lineChartData}
+                width={(Dimensions.get("window").width * 92) / 100}
+                height={200}
+                chartConfig={chartConfig}
+                style={styles.chart}
+              />
+            ) : null}
+          </View>
+        </View>
+      </ScrollView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   view: {
-    padding: 16,
+    flex: 1,
+    padding: 20,
   },
 
   topic: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: "bold",
     color: "black",
-    marginBottom: 10,
-  },
-
-  image: {
-    marginLeft: 15,
-  },
-
-  text: {
-    marginTop: 25,
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#13BC9E",
-  },
-
-  input: {
-    marginTop: 20,
-    borderColor: "#13BC9E",
-    borderWidth: 1,
-    borderRadius: 10,
-  },
-
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
   },
 
   container: {
     flex: 1,
-    justifyContent: "center", // Center vertically
-    alignItems: "center", // Center horizontally
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   chart: {
-    marginVertical: 30,
-    // marginLeft: 5,
-    // marginTop: 30,
-    // marginBottom: 30,
-    borderRadius: 16,
-    padding: 5,
+    marginVertical: 8,
+    borderRadius: 10,
   },
 
   radioContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
-    justifyContent: "space-between", // Align items with space between
-    padding: 10, // Add some padding
   },
 });
 
