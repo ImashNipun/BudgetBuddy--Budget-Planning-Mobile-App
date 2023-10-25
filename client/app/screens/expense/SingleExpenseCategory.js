@@ -113,7 +113,7 @@ const SingleExpenseCategory = ({ route, navigation }) => {
       <Text style={styles.sectionTitle}>My Expenses</Text>
       <FlatList
         data={expenses}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <ExpenseCard
             item={item}

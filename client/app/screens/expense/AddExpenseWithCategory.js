@@ -8,6 +8,7 @@ import {
   StatusBar,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
@@ -18,9 +19,11 @@ import * as ImagePicker from "expo-image-picker";
 import useAuth from "../../hooks/useAuth";
 import axios from "axios";
 import { config } from "../../config/config";
+import { FontAwesome5 } from "@expo/vector-icons";
 
 import SelectOrTakeImageModel from "../../components/expense/SelectOrTakeImageModel";
 import SelectDateAndTimeModel from "../../components/expense/SelectDateAndTimeModel";
+import SelectedImageViewModal from "../../components/expense/SelectedImageViewModal";
 
 const image =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAACXBIWXMAAAsTAAALEwEAmpwYAAABQ0lEQVR4nO3bzUrDQBQF4OrCKvjeCoIUEeqqD+FCfCLdiIo/uDwS6E4wCdTcsfm+bWFyOSdMQqddLAAAAAAAAAAAAIARkiyTXCR5SvKRZJ3kRIjThX+Xn26muP6s/RJ+5616vjmH33mtnnHO4Xcuq+ecc/jd58vqWfdOkqMktz3h3yc5rp517wi/kPALCb+Q8AsJv5DwCwm/kPALCb+Q8AsJv5DwCwm//a+UGeclyfWgs/Ak5yMXZ7j+s/AkjyMWZJzPJId9BTyMXJQdF3A2YkHGWQ/ZgjyEd+85ydXgH6R5DW2AEhqghAYooQFKaIASGqCEBiihAUpogBIaoIQGKKEBSmiAEhrgL0r/p4RV9ZxzL+E9yUH1nHMu4av3bJQ/LWEj32lLWG23ne7O3yQ5ner6bHV7vn0fAAAAAAAAAAAWU/gGhKtHrQIgGN4AAAAASUVORK5CYII=";
@@ -34,7 +37,8 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
   const [isChecked, setIsChecked] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [billImage, setBillImage] = useState(null);
-
+  const [loadingButtonVisible, setLoadingButtonVisible] = useState(false);
+  const [imageViewModal, setImageViewModal] = useState(false);
   //console.log(customCategory);
 
   const toggleModal = () => {
@@ -48,7 +52,6 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
     });
     if (!result.canceled) {
       setBillImage(result?.assets[0]?.base64);
-      console.log(result.assets[0].base64);
     }
   };
 
@@ -59,7 +62,6 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
     });
     if (!result.canceled) {
       setBillImage(result?.assets[0]?.base64);
-      console.log(result.assets[0].base64);
     }
   };
 
@@ -104,6 +106,32 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
     }
   }, []);
 
+  const logExpense = async (payload) => {
+    try {
+      const result = await axios.post(
+        `${config.BASE_URL}/api/v1/expense/`,
+        payload
+      );
+      console.log(result);
+      if (result.status == 201) {
+        Alert.alert("Congratulations!", `${result.data.message}`, [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("AllExpenseCategories"),
+          },
+        ]);
+      }
+    } catch (error) {
+      Alert.alert("Somthing went wrong!", `${error?.response?.data?.message}`, [
+        {
+          text: "OK",
+          onPress: () => navigation.navigate("AllExpenseCategories"),
+        },
+      ]);
+      console.log(error);
+    }
+  };
+
   return (
     <ScrollView>
       <TouchableOpacity
@@ -147,6 +175,7 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
         }}
         validationSchema={validationSchema}
         onSubmit={async (values) => {
+          setLoadingButtonVisible(true);
           let expense_date = selectedDate.toLocaleDateString();
           let expense_time = selectedTime.toLocaleTimeString(undefined, {
             hour12: true,
@@ -179,6 +208,16 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
             expense_time = `${formattedHours}:${minutes}:${seconds} ${period}`;
           }
 
+          const payload = {
+            ...values,
+            user_id: auth?.user,
+            custom_category,
+            bill_image: billImage,
+            expense_date,
+            expense_time,
+            budget_extended,
+          };
+
           if (customCategory?._id == values.expense_category) {
             if (
               customCategory.remaining_amount < Number(values.expense_amount)
@@ -189,20 +228,22 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
                 [
                   {
                     text: "No",
-                    onPress: () => console.log("Cancel Pressed"),
+                    onPress: () => setLoadingButtonVisible(false),
                     style: "cancel",
                   },
                   {
                     text: "Yes",
                     onPress: () => {
                       budget_extended = !budget_extended;
-                      press_ok = !press_ok;
+                      press_ok = true;
+                      logExpense(payload);
                     },
                   },
                 ]
               );
             } else {
-              press_ok = !press_ok;
+              press_ok = true;
+              logExpense(payload);
             }
           } else {
             const foundObject = allCategories.find(
@@ -219,20 +260,22 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
                   [
                     {
                       text: "No",
-                      onPress: () => console.log("Cancel Pressed"),
+                      onPress: () => setLoadingButtonVisible(false),
                       style: "cancel",
                     },
                     {
                       text: "Yes",
                       onPress: () => {
                         budget_extended = !budget_extended;
-                        press_ok = !press_ok;
+                        press_ok = true;
+                        logExpense(payload);
                       },
                     },
                   ]
                 );
               } else {
-                press_ok = !press_ok;
+                press_ok = true;
+                logExpense(payload);
               }
             } else {
               Alert.alert("Somthing went wrong!", `hhh`, [
@@ -243,41 +286,6 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
                 },
                 { text: "OK", onPress: () => console.log("Cancel Pressed") },
               ]);
-            }
-          }
-
-          const payload = {
-            ...values,
-            user_id: auth?.user,
-            custom_category,
-            bill_image: billImage,
-            expense_date,
-            expense_time,
-            budget_extended,
-          };
-          if (press_ok) {
-            try {
-              const result = await axios.post(
-                `${config.BASE_URL}/api/v1/expense/`,
-                payload
-              );
-              console.log(result);
-              if (result.status == 201) {
-                Alert.alert("Congratulations!", `${result.data.message}`, [
-                  {
-                    text: "OK",
-                    onPress: () => navigation.navigate("AllExpenseCategories"),
-                  },
-                ]);
-              }
-            } catch (error) {
-              Alert.alert("Somthing went wrong!", `${error?.response?.data?.message}`, [
-                {
-                  text: "OK",
-                  onPress: () => navigation.navigate("AllExpenseCategories"),
-                },
-              ]);
-              console.log(error);
             }
           }
         }}
@@ -374,26 +382,58 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
                 )}
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Resipt Image*</Text>
-                <TouchableOpacity
-                  style={styles.imageSelectButton}
-                  onPress={() => setModalVisible(true)}
-                >
-                  <Text style={styles.imageSelectButtonText}>
-                    Select or take a picture
-                  </Text>
-                </TouchableOpacity>
+                <Text style={styles.label}>Resipt Image</Text>
+                {billImage ? (
+                  <View style={styles.imageViewButton} onPress={() => {}}>
+                    <TouchableOpacity
+                      style={styles.imageViewButtonText}
+                      onPress={() => setImageViewModal(true)}
+                    >
+                      <FontAwesome5 name="image" size={20} color="#000" />
+                      <Text style={{ marginLeft: 10 }}>
+                        Click to see the selected image
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setBillImage(null)}>
+                      <FontAwesome5 name="trash" size={20} color="#000" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.imageSelectButton}
+                    onPress={() => setModalVisible(true)}
+                  >
+                    <Text>Select or take a picture</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
-              <View style={styles.checkboxContainer}>
-                <CheckBox
-                  value={isChecked}
-                  onValueChange={(newValue) => setIsChecked(newValue)}
-                />
-                <Text style={styles.checkboxLabel}>
-                  I need to add a custom date and time
-                </Text>
-              </View>
+              {isChecked ? (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Selected date and time</Text>
+                  <View style={styles.imageViewButton} onPress={() => {}}>
+                    <View style={styles.imageViewButtonText}>
+                      <Text>Date: {selectedDate.toDateString()}</Text>
+                      <Text style={{ marginLeft: 10 }}>
+                        Time: {selectedTime.toLocaleTimeString()}
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setIsChecked(false)}>
+                      <FontAwesome5 name="trash" size={20} color="#000" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.checkboxContainer}>
+                  <CheckBox
+                    value={isChecked}
+                    onValueChange={(newValue) => setIsChecked(newValue)}
+                  />
+                  <Text style={styles.checkboxLabel}>
+                    I need to add a custom date and time
+                  </Text>
+                </View>
+              )}
 
               <SelectOrTakeImageModel
                 visible={modalVisible}
@@ -410,12 +450,24 @@ const AddExpenseWithCategory = ({ route, navigation }) => {
                 />
               )}
 
-              <TouchableOpacity
-                style={styles.loginButton}
-                onPress={handleSubmit}
-              >
-                <Text style={styles.loginButtonText}>Add</Text>
-              </TouchableOpacity>
+              {loadingButtonVisible ? (
+                <TouchableOpacity style={styles.loginButton}>
+                  <ActivityIndicator size="large" color="#fff" />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.loginButton}
+                  onPress={handleSubmit}
+                >
+                  <Text style={styles.loginButtonText}>Add</Text>
+                </TouchableOpacity>
+              )}
+
+              <SelectedImageViewModal
+                visible={imageViewModal}
+                imageUri={billImage}
+                onClose={() => setImageViewModal(false)}
+              />
             </View>
           </View>
         )}
@@ -522,7 +574,20 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     marginBottom: 15,
   },
-  imageSelectButtonText: {},
+  imageViewButtonText: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  imageViewButton: {
+    flexDirection: "row",
+    paddingVertical: 15,
+    borderRadius: 5,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    backgroundColor: "#ccc",
+  },
 });
 
 const validationSchema = Yup.object().shape({
