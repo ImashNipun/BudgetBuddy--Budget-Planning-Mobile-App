@@ -55,9 +55,9 @@ export const ExpenseCategoryListCard = ({
       <View style={styles.progressBar}>
         <Progress.Bar
           progress={Number(progress)}
-          width={330}
-          height={8}
-          color="green"
+          width={null}
+          height={10}
+          color="#00FF99"
         />
       </View>
     </TouchableOpacity>

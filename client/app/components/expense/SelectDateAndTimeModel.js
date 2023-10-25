@@ -28,9 +28,7 @@ export default function SelectDateAndTimeModel({
 
   return (
     <View>
-      {/* <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-        <Text>Select Date</Text>
-      </TouchableOpacity> */}
+      
       {showDatePicker && (
         <DateTimePicker
           value={selectedDate}
@@ -41,11 +39,6 @@ export default function SelectDateAndTimeModel({
         />
       )}
 
-      {/* {showTimePicker && (
-        <TouchableOpacity onPress={() => setShowTimePicker(true)}>
-          <Text>Select Time</Text>
-        </TouchableOpacity>
-      )} */}
 
       {showTimePicker && (
         <DateTimePicker
@@ -56,10 +49,6 @@ export default function SelectDateAndTimeModel({
           onChange={handleTimeChange}
         />
       )}
-
-      {/* You can display the selected date and time wherever needed */}
-      <Text>Date: {selectedDate.toDateString()}</Text>
-      <Text>Time: {selectedTime.toLocaleTimeString()}</Text>
     </View>
   );
 }
