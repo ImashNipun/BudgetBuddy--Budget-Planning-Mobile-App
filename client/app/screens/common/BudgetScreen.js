@@ -5,6 +5,8 @@ import { useIsFocused } from "@react-navigation/native";
 import { config } from "../../config/config";
 import axios from "axios";
 import useAuth from "../../hooks/useAuth";
+import Loading from "../../components/common/Loading";
+import BudgetUpdateListCard from "../../components/budget/BudgetUpdateListCard";
 
 const BudgetScreen = () => {
   const isFocused = useIsFocused();
@@ -16,46 +18,12 @@ const BudgetScreen = () => {
     totalExpenses: null,
   });
 
+  const [loadingVisible, setLoadingVisible] = useState(true);
+  const [budgetUpdates, setBudgetUpdates] = useState([]);
+
   useEffect(() => {
     console.log("this is budget screen");
   }, [isFocused]);
-  // Sample data for budgets, expenses, and goals
-  // const budgets = {
-  //   currentBalance: 150000,
-  //   totalBudget: 150000,
-  //   totalExpenses: 150000,
-  // };
-
-  const expenses = [
-    { id: "1", description: "Groceries", amount: 200 },
-    { id: "2", description: "Utilities", amount: 300 },
-    { id: "3", description: "Utilities", amount: 300 },
-    { id: "4", description: "Utilities", amount: 300 },
-    { id: "5", description: "Utilities", amount: 300 },
-    { id: "6", description: "Utilities", amount: 300 },
-    { id: "7", description: "Utilities", amount: 300 },
-    { id: "8", description: "Utilities", amount: 300 },
-    { id: "9", description: "Utilities", amount: 300 },
-    { id: "10", description: "Utilities", amount: 300 },
-    { id: "11", description: "Utilities", amount: 300 },
-
-    // Add more expenses as needed
-  ];
-
-  const goals = [
-    { id: "1", description: "Vacation", targetAmount: 5000 },
-    { id: "2", description: "New Phone", targetAmount: 1000 },
-    { id: "3", description: "Utilities", amount: 300 },
-    { id: "4", description: "Utilities", amount: 300 },
-    { id: "5", description: "Utilities", amount: 300 },
-    { id: "6", description: "Utilities", amount: 300 },
-    { id: "7", description: "Utilities", amount: 300 },
-    { id: "8", description: "Utilities", amount: 300 },
-    { id: "9", description: "Utilities", amount: 300 },
-    { id: "10", description: "Utilities", amount: 300 },
-    { id: "11", description: "Utilities", amount: 300 },
-    // Add more goals as needed
-  ];
 
   useEffect(() => {
     const getBudgetDetails = async () => {
@@ -64,7 +32,11 @@ const BudgetScreen = () => {
           `${config.BASE_URL}/api/v1/budget/${auth?.user}`
         );
 
+        console.log(result?.data?.data);
+
         const result_data = result?.data?.data;
+
+        setLoadingVisible(false);
 
         if (result_data?.savings) {
           setBudget((prev) => ({
@@ -134,6 +106,21 @@ const BudgetScreen = () => {
     }
   }, [isFocused]);
 
+  useEffect(() => {
+    const getBudgetDetails = async () => {
+      try {
+        const result = await axios.get(
+          `${config.BASE_URL}/api/v1/budget/all-budgets/${auth?.user}`
+        );
+        setBudgetUpdates(result?.data?.data);
+      } catch (error) {
+        console.log(`Error:${error.message}`, error);
+      }
+    };
+
+    getBudgetDetails();
+  }, [isFocused]);
+
   const calculateTotalExpenses = ({
     selected_categories,
     total_budget,
@@ -163,32 +150,34 @@ const BudgetScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Current Balance Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Latest Budget</Text>
-        <Text style={styles.cardValue1}>Rs.{budget.currentBalance}.00</Text>
-        <Text style={styles.cardmiddle}>of</Text>
-        <Text style={styles.cardValue2}>Rs.{budget.totalBudget}.00</Text>
-      </View>
+    <>
+      {loadingVisible && <Loading />}
+      <View style={styles.container}>
+        {/* Current Balance Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Latest Budget</Text>
+          <Text style={styles.cardValue1}>Rs.{budget.currentBalance}.00</Text>
+          <Text style={styles.cardmiddle}>of</Text>
+          <Text style={styles.cardValue2}>Rs.{budget.totalBudget}.00</Text>
+        </View>
 
-      {/* Expenses List */}
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Text style={styles.sectionTitle}>Budget Updates</Text>
-      </View>
-      <FlatList
-        data={expenses}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.expenseItem}>
-            <Text>{item.description}</Text>
-            <Text>${item.amount}</Text>
-          </View>
+        {/* Expenses List */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={styles.sectionTitle}>Budget Updates</Text>
+        </View>
+        {budgetUpdates.length > 0 ? (
+          <FlatList
+            data={budgetUpdates}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => <BudgetUpdateListCard data={item} />}
+          />
+        ) : (
+          <Text>No budget updates available</Text>
         )}
-      />
 
-      {/* Goals List */}
-    </View>
+        {/* Goals List */}
+      </View>
+    </>
   );
 };
 

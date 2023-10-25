@@ -5,40 +5,48 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  StatusBar
 } from "react-native";
 import React from "react";
 import logo from "../../assets/app_logo2.png";
 import heroimage from "../../assets/buget_hero.png";
 import useAuth from "../hooks/useAuth";
+import Loading from "../components/common/Loading";
 
 const BudgetAddIntroScreen = ({ navigation }) => {
-  const {auth,onLogout} = useAuth();
+  const { auth, onLogout, mainLoadingVisible, isBudgetExsist } = useAuth();
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
-      <TouchableOpacity onPress={onLogout}><Text style={styles.title}>Logout</Text></TouchableOpacity>
-        <Image source={logo} style={styles.logo} />
+    <>
+      {mainLoadingVisible && <Loading />}
 
-        <Image source={heroimage} style={styles.relatedImage} />
+      <SafeAreaView style={{ flex: 1 }}>
+      <StatusBar backgroundColor="#fff" barStyle="dark-content"/>
+        <View style={styles.container}>
+          <TouchableOpacity onPress={onLogout}>
+            <Text style={styles.title}>Logout</Text>
+          </TouchableOpacity>
+          <Image source={logo} style={styles.logo} />
 
-        <Text style={styles.title}>Begin Your Budgeting Adventure</Text>
+          <Image source={heroimage} style={styles.relatedImage} />
 
-        <Text style={styles.introText}>
-          Welcome to Budget Buddy! Get ready to transform the way you manage
-          your money. Our easy and personalized budget setup will pave the way
-          for a more financially secure future. Let's dive in and shape your
-          financial journey together!
-        </Text>
+          <Text style={styles.title}>Begin Your Budgeting Adventure</Text>
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("BudgetSetup")}
-          //onPress={onLogout}
-        >
-          <Text style={styles.buttonText}>Setup My Budget</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          <Text style={styles.introText}>
+            Welcome to Budget Buddy! Get ready to transform the way you manage
+            your money. Our easy and personalized budget setup will pave the way
+            for a more financially secure future. Let's dive in and shape your
+            financial journey together!
+          </Text>
+
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate("BudgetSetup")}
+          >
+            <Text style={styles.buttonText}>Setup My Budget</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </>
   );
 };
 

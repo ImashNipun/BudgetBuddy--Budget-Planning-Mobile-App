@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { StatusBar } from "react-native";
 import BudgetCategorySelect from "../components/budget/BudgetCategorySelect";
 import BudgetInput from "../components/budget/BudgetInput";
 
@@ -7,6 +8,7 @@ const BudgetSetupScreen = ({ navigation }) => {
   const [budgetRenewDate, setBudgetRenewDate] = useState(0);
   return (
     <>
+    <StatusBar backgroundColor="#fff" barStyle="dark-content"/>
       {totalBudget ? (
         <BudgetCategorySelect
           totalBudget={totalBudget}
