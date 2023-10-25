@@ -8,6 +8,7 @@ import {
   Image,
   ToastAndroid,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import axios from "axios";
 import CategoryCard from "./CategoryCard";
@@ -16,6 +17,7 @@ import CustomCategorySelect from "./CustomCategorySelect";
 import data from "../../data/data";
 import { config } from "../../config/config";
 import useAuth from "../../hooks/useAuth";
+import Loading from "../common/Loading";
 
 const BudgetCategorySelect = ({
   totalBudget,
@@ -28,17 +30,23 @@ const BudgetCategorySelect = ({
   const [modelVisible, setModelVisible] = useState(false);
   const [allCategories, setAllCategories] = useState([]);
   const [remaningBudget, setRemaningBudget] = useState(0);
+  const [loadingVisible, setLoadingVisible] = useState(true);
+  const [loadingButtonVisible, setLoadingButtonVisible] = useState(false);
 
   function getNextMonthDate(selectedDay) {
     const today = new Date();
     const nextMonth = new Date(today);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
-    
-    nextMonth.setDate(Math.min(selectedDay, new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate()));
-  
+
+    nextMonth.setDate(
+      Math.min(
+        selectedDay,
+        new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate()
+      )
+    );
+
     return nextMonth;
   }
-  
 
   const onClose = () => {
     setModelVisible(false);
@@ -57,10 +65,11 @@ const BudgetCategorySelect = ({
         next_budget_renew_date: getNextMonthDate(Number(budgetRenewDate)),
       };
       try {
+        setLoadingButtonVisible(true);
         const result = await axios.post(
           `${config.BASE_URL}/api/v1/budget/`,
           budget_payload
-        );
+        ); 
         navigation.navigate("AppDrawer");
       } catch (error) {
         Alert.alert(
@@ -130,8 +139,10 @@ const BudgetCategorySelect = ({
   useEffect(() => {
     const getAllCategories = async () => {
       try {
+        setLoadingVisible(true);
         const result = await axios.get(`${config.BASE_URL}/api/v1/category/`);
         setAllCategories(result?.data?.data);
+        setLoadingVisible(false);
       } catch (error) {
         console.log(`Error: ${error.message}`, error);
       }
@@ -141,6 +152,7 @@ const BudgetCategorySelect = ({
 
   return (
     <>
+      {loadingVisible && <Loading />}
       <View style={styles.container}>
         <TouchableOpacity
           style={{ flexDirection: "row", alignItems: "center" }}
@@ -217,12 +229,20 @@ const BudgetCategorySelect = ({
               );
             })}
           </ScrollView>
-          <TouchableOpacity
-            style={styles.registerButton}
-            onPress={() => onSubmit()}
-          >
-            <Text style={styles.registerButtonText}>Continue</Text>
-          </TouchableOpacity>
+          {loadingButtonVisible ? (
+            <TouchableOpacity
+              style={styles.registerButton}
+            >
+              <ActivityIndicator size="large" color="#fff" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={() => onSubmit()}
+            >
+              <Text style={styles.registerButtonText}>Continue</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       <CustomCategorySelect
@@ -243,6 +263,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: "#fff",
   },
   introText: {
     fontSize: 24,

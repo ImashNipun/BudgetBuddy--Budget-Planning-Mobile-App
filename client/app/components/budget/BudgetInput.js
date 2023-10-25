@@ -34,7 +34,7 @@ const BudgetInput = ({ setTotalBudget, setBudgetRenewDate }) => {
           touched,
         }) => (
           <View style={styles.container}>
-            <StatusBar backgroundColor="#8373C1" />
+           
 
             <Image source={secImg} style={styles.relatedImage} />
 
@@ -98,6 +98,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor:"#fff"
   },
   headerContainer: {
     alignItems: "flex-start", // Align title and welcome message to the left

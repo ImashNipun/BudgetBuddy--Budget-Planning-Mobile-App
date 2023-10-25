@@ -9,6 +9,7 @@ import {
   Dimensions,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import CheckBox from "expo-checkbox";
 import * as Yup from "yup";
@@ -40,14 +41,20 @@ const CustomCategorySelect = ({
   const [categoryName, setCategoryName] = useState("");
   const [description, setDescription] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
+  const [loadingButtonVisible, setLoadingButtonVisible] = useState(false);
 
   function getNextMonthDate(selectedDay) {
     const today = new Date();
     const nextMonth = new Date(today);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
-    
-    nextMonth.setDate(Math.min(selectedDay, new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate()));
-  
+
+    nextMonth.setDate(
+      Math.min(
+        selectedDay,
+        new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate()
+      )
+    );
+
     return nextMonth;
   }
 
@@ -76,11 +83,12 @@ const CustomCategorySelect = ({
 
         const handleSavingsSubmit = async () => {
           try {
+            setLoadingButtonVisible(true)
             const result = await axios.post(
               `${config.BASE_URL}/api/v1/budget/`,
               savings_payload
             );
-            navigation.navigate('AppDrawer');
+            navigation.navigate("AppDrawer");
           } catch (error) {
             Alert.alert("Bad request", `${error?.response?.data?.message}`, [
               {
@@ -131,12 +139,13 @@ const CustomCategorySelect = ({
 
           const handleCustomCategorySubmit = async () => {
             try {
+              setLoadingButtonVisible(true)
               const result = await axios.post(
                 `${config.BASE_URL}/api/v1/budget/`,
                 custom_category_payload
               );
 
-              navigation.navigate('AppDrawer');
+              navigation.navigate("AppDrawer");
             } catch (error) {
               Alert.alert("Bad request", `${error?.response?.data?.message}`, [
                 {
@@ -146,7 +155,7 @@ const CustomCategorySelect = ({
                 },
                 { text: "OK", onPress: () => console.log("Cancel Pressed") },
               ]);
-            } 
+            }
           };
 
           Alert.alert(
@@ -238,9 +247,15 @@ const CustomCategorySelect = ({
               )}
             </View>
           )}
-          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>Continue</Text>
-          </TouchableOpacity>
+          {loadingButtonVisible ? (
+            <TouchableOpacity style={styles.button}>
+              <ActivityIndicator size="large" color="#fff" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+              <Text style={styles.buttonText}>Continue</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </Modal>
@@ -293,14 +308,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: "blue",
+    backgroundColor: "#8373C1", // Button background color for registration screen
+    paddingVertical: 15,
     borderRadius: 5,
-    padding: 10,
+    justifyContent: "center",
     alignItems: "center",
+    marginTop: 15,
   },
   buttonText: {
-    color: "white",
-    fontSize: 16,
+    color: "white", // Button text color for registration screen
+    fontSize: 18,
+    fontWeight: "bold",
   },
   modalClose: {
     height: 30,
