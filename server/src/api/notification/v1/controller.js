@@ -123,4 +123,30 @@ router.get(
     })
   );
 
+
+
+  router.get(
+    "/top",
+    asynchandler(async (req, res) => {
+  
+      // Find one tip where shown is false. You might want to add a sort mechanism based on some criteria if you have a preferred order.
+      const tip = await Tips.findOne({ shown: false }).lean();
+      if (!tip) {
+        return response({
+          res,
+          status: 404,
+          message: "Tip not found or already shown!",
+        });
+      }
+  
+      // Update shown to true and set the shownDate to now
+      await Tips.updateOne({ _id: tip._id }, { shown: true, shownDate: Date.now() });
+  
+      response({
+        res,
+        data: tip,
+      });
+    })
+);
+
 export default router;

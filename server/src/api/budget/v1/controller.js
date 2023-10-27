@@ -211,14 +211,14 @@ router.post(
     existBudget.budget_expired = true;
     existBudget.save();
 
-    //const budget = await Budget.create(payload);
+    const budget = await Budget.create(payload);
 
     res.status(200).json(payload);
   })
 );
 
-router.put(
-  "/:id",
+router.post(
+  "/amount-share/:id",
   asynchandler(async (req, res) => {
     const user_id = req.params.id;
     const {
@@ -257,19 +257,17 @@ router.put(
 
       customCategory.remaining_amount -= share_amount;
 
-      customCategory.save();
+      await customCategory.save();
 
       existBudget?.selected_categories.map((category) => {
-        if (category.category_id._id.toString() === category_share_to) {
+        if (category.category_id._id.toString() == category_share_to) {
           category.remaining_amount += share_amount;
           category.initial_amount += share_amount;
         }
       });
-
-      existBudget.save();
     } else {
       if (existBudget.custom_category) {
-        if (existBudget.custom_category._id.toString() === category_share_to) {
+        if (existBudget.custom_category._id.toString() == category_share_to) {
           const customCategory = await CustomCategory.findById(
             category_share_to
           );
@@ -278,36 +276,81 @@ router.put(
           customCategory.initial_amount += share_amount;
 
           existBudget?.selected_categories.map((category) => {
-            if (category.category_id._id.toString() === category_share_from) {
+            if (category.category_id._id.toString() == category_share_from) {
               category.remaining_amount -= share_amount;
             }
           });
 
-          customCategory.save();
-          existBudget.save();
+          await customCategory.save();
         } else {
           existBudget?.selected_categories.map((category) => {
-            if (category.category_id._id.toString() === category_share_to) {
+            if (category.category_id._id.toString() == category_share_to) {
               category.remaining_amount += share_amount;
               category.initial_amount += share_amount;
+             
             }
           });
 
           existBudget?.selected_categories.map((category) => {
-            if (category.category_id._id.toString() === category_share_from) {
+            if (category.category_id._id.toString() == category_share_from) {
               category.remaining_amount -= share_amount;
+              
             }
           });
-
-          existBudget.save();
         }
       }
     }
+
+    await existBudget.save();
 
     return response({
       res,
       status: 200,
       message: "Budget updated Successfully!",
+    });
+  })
+);
+
+router.get(
+  "/all-budgets/:id",
+  asynchandler(async (req, res) => {
+    const user_id = req.params.id;
+
+    const existBudget = await Budget.find({
+      user_id: user_id,
+    })
+      .populate({
+        path: "selected_categories.category_id",
+      })
+      .populate("user_id")
+      .populate({
+        path: "custom_category",
+      })
+      .populate({
+        path: "savings",
+      });
+
+    return response({
+      res,
+      status: 200,
+      data: existBudget,
+    });
+  })
+);
+
+router.get(
+  "/all-savings/:id",
+  asynchandler(async (req, res) => {
+    const user_id = req.params.id;
+
+    const savings = await Savings.find({
+      user_id: user_id,
+    });
+
+    return response({
+      res,
+      status: 200,
+      data: savings,
     });
   })
 );
