@@ -1,8 +1,14 @@
 // ExpenseCategoryCard.js
 import React, { useState } from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import * as Progress from "react-native-progress";
-
 
 export const SingleExpenseCategoryCard = ({
   data,
@@ -22,6 +28,20 @@ export const SingleExpenseCategoryCard = ({
       customCategory,
       cat_id: custom_cat ? data._id : data.category_id._id,
     });
+  };
+
+  const handleShareAmountExceed = () => {
+    Alert.alert(
+      "Expense category remaining amount is 0",
+      "You can't share amount among categories",
+      [
+        {
+          text: "Ok",
+          onPress: () => console.log("Cancel Pressed"),
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const progress = calculatePersentage().toFixed(2);
@@ -65,14 +85,25 @@ export const SingleExpenseCategoryCard = ({
         >
           <Text style={styles.mainButtonText}>Add an Expense</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.mainOutlineButton}>
-          <Text
-            style={styles.mainOutlineButtonText}
-            onPress={() => setShareAmountModelVisibel(true)}
-          >
-            Share Amount
-          </Text>
-        </TouchableOpacity>
+        {data.remaining_amount > 0 ? (
+          <TouchableOpacity style={styles.mainOutlineButton}>
+            <Text
+              style={styles.mainOutlineButtonText}
+              onPress={() => setShareAmountModelVisibel(true)}
+            >
+              Share Amount
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.mainOutlineButton}>
+            <Text
+              style={styles.mainOutlineButtonText}
+              onPress={() => handleShareAmountExceed()}
+            >
+              Share Amount
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
+  Dimensions,
 } from "react-native";
 import { ExpenseCategoryListCard } from "../../components/expense/ExpenseCategoryListCard";
 import data from "../../data/data";
@@ -16,6 +17,9 @@ import axios from "axios";
 import { useIsFocused } from "@react-navigation/native";
 import useAuth from "../../hooks/useAuth";
 import Loading from "../../components/common/Loading";
+
+const screenWidth = Dimensions.get("window").width;
+const screenHeight = Dimensions.get("window").height;
 
 const ExpenseScreen = ({ navigation }) => {
   const isFocused = useIsFocused();
@@ -54,7 +58,7 @@ const ExpenseScreen = ({ navigation }) => {
   return (
     <>
       {loadingVisible && <Loading />}
-      <SafeAreaView>
+      <SafeAreaView style={styles.pageContainer}>
         <View style={styles.TitleContainer}>
           <View
             style={{
@@ -120,6 +124,10 @@ const ExpenseScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  pageContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   TitleContainer: {
     margin: 15,
   },
@@ -133,7 +141,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   ScrollViewContainer: {
-    height: 580,
+    height: 550,
   },
   mainButton: {
     backgroundColor: "#8274BC",

@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 18,
     margin: 15,
-    marginTop: 0,
+    marginTop: 2,
     elevation: 4,
   },
   categoryInfo: {

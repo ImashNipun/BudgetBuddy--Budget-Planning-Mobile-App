@@ -18,8 +18,10 @@ const BudgetScreen = () => {
     totalExpenses: null,
   });
 
-  const [loadingVisible, setLoadingVisible] = useState(true);
+  
   const [budgetUpdates, setBudgetUpdates] = useState([]);
+  const [budgetLoad, setBudgetLoad] = useState(true);
+  const [budgetListLoad, setBudgetListLoad] = useState(true);
 
   useEffect(() => {
     console.log("this is budget screen");
@@ -36,7 +38,9 @@ const BudgetScreen = () => {
 
         const result_data = result?.data?.data;
 
-        setLoadingVisible(false);
+        setBudgetLoad(false);
+
+
 
         if (result_data?.savings) {
           setBudget((prev) => ({
@@ -113,6 +117,7 @@ const BudgetScreen = () => {
           `${config.BASE_URL}/api/v1/budget/all-budgets/${auth?.user}`
         );
         setBudgetUpdates(result?.data?.data);
+        setBudgetListLoad(false);
       } catch (error) {
         console.log(`Error:${error.message}`, error);
       }
@@ -151,7 +156,7 @@ const BudgetScreen = () => {
 
   return (
     <>
-      {loadingVisible && <Loading />}
+      {(budgetLoad || budgetListLoad) && <Loading />}
       <View style={styles.container}>
         {/* Current Balance Card */}
         <View style={styles.card}>

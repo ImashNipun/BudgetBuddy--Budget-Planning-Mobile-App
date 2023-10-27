@@ -30,10 +30,19 @@ const ShareAmountModel = ({
   allCategories,
   data,
   custom_cat,
+  setIsAmountShared,
 }) => {
   const { auth } = useAuth();
   const [items, setItems] = useState([]);
   const [changeState, setChangeState] = useState(false);
+
+  const validationSchema = Yup.object().shape({
+    expense_category: Yup.string().required("Category is required"),
+    expense_amount: Yup.number()
+      .required("Amount is required")
+      .min(0, "Amount must be a positive number")
+      .lessThan(data?.remaining_amount, `Amount must be less than ${data?.remaining_amount}`),
+  });
 
   useEffect(() => {
     setItems([]);
@@ -120,7 +129,7 @@ const ShareAmountModel = ({
                     [
                       {
                         text: "OK",
-                        onPress: () => console.log(""),
+                        onPress: () => setIsAmountShared((prev) => !prev),
                       },
                     ]
                   );
@@ -309,13 +318,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-});
-
-const validationSchema = Yup.object().shape({
-  expense_category: Yup.string().required("Email is required"),
-  expense_amount: Yup.number()
-    .required("Amount is required")
-    .min(0, "Amount must be a positive number"),
 });
 
 export default ShareAmountModel;

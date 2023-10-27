@@ -1,17 +1,19 @@
 {
   "expo": {
     "name": "Budget Buddy",
-    "slug": "Plan your budget and track your expenses",
+    "slug": "budget-buddy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/app_logo.png",
+    "icon": "./assets/app_icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-screen2.png",
       "resizeMode": "contain",
       "backgroundColor": "#8274BC"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "config": {
@@ -20,13 +22,19 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/app_icon.png",
         "backgroundColor": "#ffffff"
-
-      }
+      },
+      "package": "com.imashnipun.budgetbuddy"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f4300532-b114-4067-bfe0-a934466fad3e"
+      }
+    },
+    "owner": "imashnipun"
   }
 }

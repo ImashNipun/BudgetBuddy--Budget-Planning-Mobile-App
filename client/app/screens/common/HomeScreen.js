@@ -34,7 +34,9 @@ const HomeScreen = ({ navigation }) => {
     useState(false);
   const [expenseModalData, setExpenseModalData] = useState(null);
   const [goals, setGoals] = useState(null);
-  const [loadingVisible, setLoadingVisible] = useState(true);
+  const [budgetLoad, setBudgetLoad] = useState(true);
+  const [goalLoad, setGoalLoad] = useState(true);
+  const [expenseLoad, setExpenseLoad] = useState(true);
 
   useEffect(() => {
     async function getdata() {
@@ -60,7 +62,7 @@ const HomeScreen = ({ navigation }) => {
 
         const result_data = result?.data?.data;
 
-        setLoadingVisible(false);
+        setBudgetLoad(false);
 
         if (result_data?.savings) {
           setBudget((prev) => ({
@@ -165,6 +167,8 @@ const HomeScreen = ({ navigation }) => {
           `${config.BASE_URL}/api/v1/expense/user/${auth?.user}`
         );
 
+        setExpenseLoad(false);
+
         let expense = result?.data?.data;
         if (result?.data?.data.length != 0 && result?.data?.data.length > 5) {
           for (let i = 0; i < 5; i++) {
@@ -186,6 +190,7 @@ const HomeScreen = ({ navigation }) => {
           `${config.BASE_URL}/api/v1/goals/${auth?.user}`
         );
 
+        setGoalLoad(false);
         if (result?.status == 200) {
           //console.log(result?.data?.data);
           setGoals(result?.data?.data);
@@ -209,7 +214,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <>
-      {loadingVisible && <Loading />}
+      {(expenseLoad || goalLoad || budgetLoad) && <Loading />}
       <View style={styles.container}>
         {/* Current Balance Card */}
         <View style={styles.card}>
@@ -260,9 +265,7 @@ const HomeScreen = ({ navigation }) => {
               borderRadius: 5,
               borderStyle: "dashed",
             }}
-            onPress={() => {
-              
-            }}
+            onPress={() => {}}
           >
             All expenses
           </Text>
