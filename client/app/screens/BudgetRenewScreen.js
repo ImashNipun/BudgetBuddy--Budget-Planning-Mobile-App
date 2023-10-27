@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
-  Alert
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Formik } from "formik";
@@ -18,8 +18,8 @@ import { config } from "../config/config";
 import useAuth from "../hooks/useAuth";
 import Loading from "../components/common/Loading";
 
-const BudgetRenewScreen = () => {
-  const { auth, mainLoadingVisible, onLogout} = useAuth();
+const BudgetRenewScreen = ({navigation}) => {
+  const { auth, mainLoadingVisible, onLogout } = useAuth();
   const [budget, setBudget] = useState(null);
   const [goals, setGoals] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -121,21 +121,7 @@ const BudgetRenewScreen = () => {
                 renew_payload
               );
 
-              if(budgetrenew?.status == 200){
-                Alert.alert(
-                  "Budget Updated",
-                  "Your budget has been updated successfully",
-                  [
-                    {
-                      text: "OK",
-                      onPress: () => {
-                        navigation.navigate("AppDrawer");
-                      },
-                    },
-                  ],
-                  { cancelable: false }
-                );
-              }
+              navigation.navigate("AppDrawer");
             } catch (error) {
               console.log(error);
               Alert.alert(
@@ -145,7 +131,7 @@ const BudgetRenewScreen = () => {
                   {
                     text: "OK",
                     onPress: () => {
-                      onLogout()
+                      onLogout();
                     },
                   },
                 ],
@@ -193,9 +179,7 @@ const BudgetRenewScreen = () => {
                   )}
                 </View>
                 {loadingButtonVisible ? (
-                  <TouchableOpacity
-                    style={styles.loginButton}
-                  >
+                  <TouchableOpacity style={styles.loginButton}>
                     <ActivityIndicator size="large" color="#fff" />
                   </TouchableOpacity>
                 ) : (

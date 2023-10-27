@@ -137,6 +137,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     setIsBudgetExist(false);
+    setIsBudgetExpire(true);
   };
 
   const value = {
