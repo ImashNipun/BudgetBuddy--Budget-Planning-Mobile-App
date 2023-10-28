@@ -2,11 +2,14 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import bodyParser from 'body-parser'
+import expressHealth from 'express-health-middleware';
 import apiRouter from "./api";
 import config from "./config";
 import { authenticator, errorHandler } from "./middleware";
 
 const app = express();
+
+app.use(expressHealth());
 
 app.use(
   cors({

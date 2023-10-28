@@ -10,6 +10,11 @@ const expenseSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "CustomCategory",
     },
+    budget_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Budget",
+      required: true,
+    },
     expense_name: {
       type: String,
       required: true,

@@ -13,6 +13,21 @@ router.post(
   asynchandler(async (req, res) => {
     let payload = req.body;
 
+    const existBudget = await Budget.findOne({
+      user_id: payload.user_id,
+      budget_expired: false,
+    });
+
+    if (!existBudget) {
+      return response({
+        res,
+        status: 400,
+        message: "Budget don't exist!",
+      });
+    }
+
+    payload.budget_id = existBudget._id;
+
     if (!payload.expense_category) {
       return response({
         res,
@@ -33,19 +48,6 @@ router.post(
         res,
         status: 400,
         message: "User id doesn't exist in the payload",
-      });
-    }
-
-    const existBudget = await Budget.findOne({
-      user_id: payload.user_id,
-      budget_expired: false,
-    });
-
-    if (!existBudget) {
-      return response({
-        res,
-        status: 400,
-        message: "Budget don't exist!",
       });
     }
 
@@ -73,7 +75,7 @@ router.post(
       );
 
       if (Number(payload.expense_amount) > customCategory.remaining_amount) {
-        customCategory.remaining_amount = customCategory.remaining_amount;
+        customCategory.remaining_amount = 0;
       } else {
         customCategory.remaining_amount -= Number(payload.expense_amount);
       }
@@ -94,7 +96,7 @@ router.post(
       }
 
       if (Number(payload.expense_amount) > selectedCategory.remaining_amount) {
-        selectedCategory.remaining_amount = selectedCategory.remaining_amount;
+        selectedCategory.remaining_amount = 0;
       } else {
         selectedCategory.remaining_amount -= Number(payload.expense_amount);
       }
@@ -106,7 +108,6 @@ router.post(
       res,
       status: 201,
       message: "Expense add successfully!",
-      // data: existBudget,
     });
   })
 );
@@ -135,11 +136,17 @@ router.get(
     const category_id = req.query.cid;
     const is_custom_category = req.query.is_custom_category;
 
+    const existBudget = await Budget.findOne({
+      user_id: user_id,
+      budget_expired: false,
+    });
+
     if (is_custom_category == "false") {
       console.log("gygy");
       const expenses = await Expense.find({
         user_id: user_id,
         expense_category: category_id,
+        budget_id: existBudget._id,
       }).populate({ path: "expense_category" });
 
       return response({
@@ -151,6 +158,7 @@ router.get(
       const expenses = await Expense.find({
         user_id: user_id,
         custom_category_id: category_id,
+        budget_id: existBudget._id,
       }).populate({ path: "custom_category_id" });
 
       return response({
