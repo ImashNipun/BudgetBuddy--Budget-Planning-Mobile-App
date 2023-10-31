@@ -31,6 +31,7 @@ const ShareAmountModel = ({
   data,
   custom_cat,
   setIsAmountShared,
+  navigation,
 }) => {
   const { auth } = useAuth();
   const [items, setItems] = useState([]);
@@ -41,7 +42,10 @@ const ShareAmountModel = ({
     expense_amount: Yup.number()
       .required("Amount is required")
       .min(0, "Amount must be a positive number")
-      .lessThan(data?.remaining_amount, `Amount must be less than ${data?.remaining_amount}`),
+      .lessThan(
+        data?.remaining_amount,
+        `Amount must be less than ${data?.remaining_amount}`
+      ),
   });
 
   useEffect(() => {
@@ -117,8 +121,8 @@ const ShareAmountModel = ({
               }
 
               try {
-                const result = await axios.put(
-                  `${config.BASE_URL}/api/v1/budget/${auth?.user}`,
+                const result = await axios.post(
+                  `${config.BASE_URL}/api/v1/budget/amount-share/${auth?.user}`,
                   payload
                 );
 
@@ -129,13 +133,17 @@ const ShareAmountModel = ({
                     [
                       {
                         text: "OK",
-                        onPress: () => setIsAmountShared((prev) => !prev),
+                        onPress: () => {
+                          setIsAmountShared((prev) => !prev);
+                          navigation.navigate("AllExpenseCategories");
+                        },
                       },
                     ]
                   );
                   onClose();
                 }
               } catch (error) {
+                console.log(error);
                 Alert.alert(
                   "Somthing went wrong",
                   `${error?.response?.data?.message}`,

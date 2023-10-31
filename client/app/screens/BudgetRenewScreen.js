@@ -25,6 +25,7 @@ const BudgetRenewScreen = ({navigation}) => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingButtonVisible, setLoadingButtonVisible] = useState(false);
+  
   useEffect(() => {
     const getExpiredBudget = async () => {
       try {

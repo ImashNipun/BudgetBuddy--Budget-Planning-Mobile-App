@@ -40,6 +40,7 @@ const RegisterScreen = ({ navigation }) => {
               );
             }
           } catch (error) {
+            console.log(error);
             if (error?.response?.status == 400) {
               Alert.alert("Bad request", `${error?.response?.data?.message}`, [
                 {

@@ -138,6 +138,7 @@ const SingleExpenseCategory = ({ route, navigation }) => {
           allCategories={allCategories}
           custom_cat={custom_cat}
           setIsAmountShared={setIsAmountShared}
+          navigation={navigation}
         />
 
         <SingleExpenseModal

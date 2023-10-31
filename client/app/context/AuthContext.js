@@ -84,6 +84,7 @@ export const AuthProvider = ({ children }) => {
       setIsBudgetExist(false);
       setIsBudgetExpire(false);
       setMainLoadingVisible(false);
+      logout();
       // if (error?.response?.data?.data == null) {
         
         
